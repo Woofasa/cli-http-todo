@@ -7,6 +7,7 @@ import (
 var (
 	ErrAlreadyExists = errors.New("task already exists")
 	ErrNotFound      = errors.New("task not found")
+	ErrCreatingTask  = errors.New("error creating task")
 )
 
 type TaskList struct {
@@ -19,10 +20,16 @@ func NewTaskList() *TaskList {
 	}
 }
 
-func (t *TaskList) CreateTask(task *Task) error {
+func (t *TaskList) CreateTask(title string, desc string) error {
+	task, err := NewTask(title, desc)
+	if err != nil {
+		return ErrCreatingTask
+	}
+
 	if _, ok := t.Tasks[task.ID]; ok {
 		return ErrAlreadyExists
 	}
+
 	t.Tasks[task.ID] = task
 	return nil
 }

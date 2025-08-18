@@ -19,12 +19,12 @@ var (
 )
 
 type Task struct {
-	ID          string
-	Title       string
-	Description string
-	Status      Status
-	CreatedAt   time.Time
-	CompletedAt time.Time
+	ID          string    `json:"id"`
+	Title       string    `json:"title"`
+	Description string    `json:"description"`
+	Status      Status    `json:"status"`
+	CreatedAt   time.Time `json:"created_at"`
+	CompletedAt time.Time `json:"completed_at"`
 }
 
 func NewTask(title string, desc string) (*Task, error) {

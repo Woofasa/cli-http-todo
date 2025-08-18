@@ -3,6 +3,7 @@ package domain
 import (
 	"errors"
 	"time"
+	"unicode/utf8"
 
 	"github.com/google/uuid"
 )
@@ -28,7 +29,7 @@ type Task struct {
 }
 
 func NewTask(title string, desc string) (*Task, error) {
-	if title == "" || len(title) > 20 {
+	if title == "" || utf8.RuneCountInString(title) > 24 {
 		return nil, ErrInvalidName
 	}
 	return &Task{

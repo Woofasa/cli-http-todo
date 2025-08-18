@@ -2,6 +2,7 @@ package domain
 
 import (
 	"errors"
+	"fmt"
 )
 
 var (
@@ -20,10 +21,18 @@ func NewTaskList() *TaskList {
 	}
 }
 
+func (t TaskList) NumeratedSort() []*Task {
+	sorted := make([]*Task, 0, len(t.Tasks))
+	for _, v := range t.Tasks {
+		sorted = append(sorted, v)
+	}
+	return sorted
+}
+
 func (t *TaskList) CreateTask(title string, desc string) error {
 	task, err := NewTask(title, desc)
 	if err != nil {
-		return ErrCreatingTask
+		return fmt.Errorf("creating task error: %w", err)
 	}
 
 	if _, ok := t.Tasks[task.ID]; ok {

@@ -2,16 +2,16 @@
   "Tasks": {
     "20124d7c-a9b0-462e-96e7-3442708f771f": {
       "id": "20124d7c-a9b0-462e-96e7-3442708f771f",
-      "title": "123",
-      "description": "123132",
+      "title": "Помыть попу",
+      "description": "Взять шампунь и прополоскать",
       "status": true,
       "created_at": "2025-08-19T00:59:05.259113207+03:00",
       "completed_at": "2025-08-19T00:59:05.259113252+03:00"
     },
     "2903ddeb-dcd6-4c2a-9b44-c098f3ec82f5": {
       "id": "2903ddeb-dcd6-4c2a-9b44-c098f3ec82f5",
-      "title": "qweqe",
-      "description": "qwrqhwrqwrqbr",
+      "title": "Супа поесть",
+      "description": "Взять тарелку и нахуяриться",
       "status": true,
       "created_at": "2025-08-19T00:59:28.172423281+03:00",
       "completed_at": "2025-08-19T00:59:28.172423352+03:00"

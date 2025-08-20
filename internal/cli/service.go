@@ -1,15 +1,15 @@
 package cli
 
 import (
-	"bufio"
 	"fmt"
 	"log"
 	"main/internal/domain"
 	"main/internal/repo"
 	"main/internal/repo/json_storage"
-	"os"
-	"os/exec"
+	"strconv"
 	"strings"
+
+	"github.com/fatih/color"
 )
 
 func Run() error {
@@ -27,127 +27,44 @@ func Run() error {
 
 	running := true
 	for running {
-		numerated := taskList.NumeratedSort()
-		fmt.Println("Task list:")
-		for i, v := range numerated {
-			fmt.Printf("%d: %s - %s\n", i+1, v.Title, getStatusString(v))
+		defaultSort := taskList.DefaultSort()
+		fmt.Println(color.HiRedString("Task list:"))
+		for i, v := range defaultSort {
+			if v.Status == domain.Closed {
+				fmt.Printf("%s: %s %s %s\nCreated at: %s\nClosed at: %s\n\n",
+					color.HiRedString((strconv.Itoa(i + 1))),
+					color.HiGreenString(v.Title),
+					color.HiRedString("-"),
+					getStatusString(v),
+					v.CreatedAt.Format("02.01.2006 | 15:04"),
+					v.CompletedAt.Format("02.01.2006 | 15:04"),
+				)
+			} else {
+				fmt.Printf("%s: %s %s %s\nCreated: %s\n\n",
+					color.HiRedString(strconv.Itoa(i+1)),
+					color.HiGreenString(v.Title),
+					color.HiRedString("-"),
+					getStatusString(v),
+					v.CreatedAt.Format("02.01.2006 | 15:04"))
+			}
 		}
-		fmt.Println()
-		var choice string
-		fmt.Println("list commands: \"exit\" | \"delete\" | \"add\"")
-		fmt.Println("task commands: \"close\" | \"open\" | \"rename\" | \"change description\"")
-		fmt.Print("Make one of the commands: ")
-		fmt.Scan(&choice)
-		switch strings.ToLower(choice) {
+		command := askCommand()
+		switch strings.ToLower(command) {
 		case "exit":
 			running = false
 		case "delete":
-			deleteHandler(taskList, repo, numerated)
+			deleteHandler(taskList, repo, defaultSort)
 		case "add":
 			addHandler(taskList, repo)
 		case "close":
-			closeHandler(taskList, repo, numerated)
+			closeHandler(taskList, repo, defaultSort)
 		case "open":
-			openHandler(taskList, repo, numerated)
+			openHandler(taskList, repo, defaultSort)
 		default:
-			fmt.Println("Unknown command")
+			fmt.Printf("%s\n", color.HiRedString("Unknown command"))
 			pressEnter()
 		}
 
 	}
 	return nil
-}
-
-func getStatusString(task *domain.Task) string {
-	if task.Status {
-		return "[ ]"
-	}
-	return "[X]"
-}
-
-func addHandler(taskList *domain.TaskList, repo *repo.Repository) (title, desc string) {
-	reader := bufio.NewScanner(os.Stdin)
-	fmt.Print("Task title: ")
-	reader.Scan()
-	title = reader.Text()
-	fmt.Print("Task description: ")
-	reader.Scan()
-	desc = reader.Text()
-	if err := taskList.CreateTask(title, desc); err != nil {
-		fmt.Println(err)
-		pressEnter()
-	}
-	repo.SaveAll(taskList)
-	clear()
-	return
-}
-
-func deleteHandler(taskList *domain.TaskList, repo *repo.Repository, filteredList []*domain.Task) {
-	id, err := askID("Task to delete: ", len(filteredList))
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	idToRemove := filteredList[id-1].ID
-	taskList.RemoveTask(idToRemove)
-	repo.SaveAll(taskList)
-	pressEnter()
-	clear()
-}
-
-func closeHandler(taskList *domain.TaskList, repo *repo.Repository, filteredList []*domain.Task) {
-	id, err := askID("Task to close: ", len(filteredList))
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	idToRemove := filteredList[id-1].ID
-	if err := taskList.Tasks[idToRemove].CloseTask(); err != nil {
-		fmt.Println(err)
-		pressEnter()
-		return
-	}
-	repo.SaveAll(taskList)
-	clear()
-}
-
-func openHandler(taskList *domain.TaskList, repo *repo.Repository, filteredList []*domain.Task) {
-	id, err := askID("Task to open: ", len(filteredList))
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	idToRemove := filteredList[id-1].ID
-	if err := taskList.Tasks[idToRemove].OpenTask(); err != nil {
-		fmt.Println(err)
-		pressEnter()
-		return
-	}
-	repo.SaveAll(taskList)
-	clear()
-}
-
-func askID(promt string, max int) (int, error) {
-	fmt.Print(promt)
-	var id int
-	fmt.Scan(&id)
-	if id < 0 || id > max {
-		return 0, fmt.Errorf("invalid id")
-	}
-	return id, nil
-}
-
-func clear() {
-	cmd := exec.Command("clear")
-	cmd.Stdout = os.Stdout
-	cmd.Run()
-}
-
-func pressEnter() {
-	fmt.Print("Press Enter to continue.")
-	fmt.Scanln()
-	clear()
 }

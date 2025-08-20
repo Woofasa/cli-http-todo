@@ -67,6 +67,7 @@ func (t *Task) CloseTask() error {
 		return ErrAlreadyClosed
 	}
 	t.Status = Closed
+	t.CompletedAt = time.Now()
 	return nil
 }
 

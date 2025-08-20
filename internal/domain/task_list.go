@@ -3,6 +3,7 @@ package domain
 import (
 	"errors"
 	"fmt"
+	"slices"
 )
 
 var (
@@ -21,11 +22,20 @@ func NewTaskList() *TaskList {
 	}
 }
 
-func (t TaskList) NumeratedSort() []*Task {
+func (t TaskList) DefaultSort() []*Task {
 	sorted := make([]*Task, 0, len(t.Tasks))
 	for _, v := range t.Tasks {
 		sorted = append(sorted, v)
 	}
+
+	slices.SortFunc(sorted, func(a, b *Task) int {
+		if a.CreatedAt.Before(b.CreatedAt) {
+			return -1
+		} else if b.CreatedAt.Before(a.CreatedAt) {
+			return 1
+		}
+		return 0
+	})
 	return sorted
 }
 

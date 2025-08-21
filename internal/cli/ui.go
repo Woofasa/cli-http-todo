@@ -5,6 +5,7 @@ import (
 	"main/internal/domain"
 	"os"
 	"os/exec"
+	"strings"
 
 	"github.com/fatih/color"
 )
@@ -13,11 +14,17 @@ func askCommand() string {
 	fmt.Println()
 	var command string
 	fmt.Println("commands:")
-	fmt.Println("\"exit\" | \"delete\" | \"add\"")
-	fmt.Println("\"close\" | \"open\" | \"rename\" | \"change description\"")
+	fmt.Println("\"exit\" | \"delete\" | \"add\" | \"close\" | \"open\" | \"rename\" | \"change description\" | \"filter\"")
 	fmt.Print("Make one of the commands: ")
 	fmt.Scan(&command)
 	return command
+}
+
+func askFilter(promt string) string {
+	fmt.Print(promt)
+	var filter string
+	fmt.Scan(&filter)
+	return strings.TrimSpace(filter)
 }
 
 func getStatusString(task *domain.Task) string {
@@ -46,5 +53,4 @@ func clear() {
 func pressEnter() {
 	fmt.Print("Press Enter to continue.")
 	fmt.Scanln()
-	clear()
 }

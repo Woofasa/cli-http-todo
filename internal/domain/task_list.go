@@ -22,13 +22,8 @@ func NewTaskList() *TaskList {
 	}
 }
 
-func (t TaskList) DefaultSort() []*Task {
-	sorted := make([]*Task, 0, len(t.Tasks))
-	for _, v := range t.Tasks {
-		sorted = append(sorted, v)
-	}
-
-	slices.SortFunc(sorted, func(a, b *Task) int {
+func Sort(filteredList []*Task) []*Task {
+	slices.SortFunc(filteredList, func(a, b *Task) int {
 		if a.CreatedAt.Before(b.CreatedAt) {
 			return -1
 		} else if b.CreatedAt.Before(a.CreatedAt) {
@@ -36,7 +31,30 @@ func (t TaskList) DefaultSort() []*Task {
 		}
 		return 0
 	})
-	return sorted
+	return filteredList
+}
+
+func (t TaskList) Filter(pattern string) []*Task {
+	filtered := make([]*Task, 0, len(t.Tasks))
+	switch pattern {
+	case "opened":
+		for _, v := range t.Tasks {
+			if v.Status == Opened {
+				filtered = append(filtered, v)
+			}
+		}
+	case "closed":
+		for _, v := range t.Tasks {
+			if v.Status == Closed {
+				filtered = append(filtered, v)
+			}
+		}
+	default:
+		for _, v := range t.Tasks {
+			filtered = append(filtered, v)
+		}
+	}
+	return filtered
 }
 
 func (t *TaskList) CreateTask(title string, desc string) error {

@@ -19,6 +19,8 @@ func addHandler(taskList *domain.TaskList, repo *repo.Repository) (title, desc s
 	if err := taskList.CreateTask(title, desc); err != nil {
 		fmt.Println(err)
 		pressEnter()
+		clear()
+		return
 	}
 	repo.SaveAll(taskList)
 	clear()
@@ -29,6 +31,8 @@ func deleteHandler(taskList *domain.TaskList, repo *repo.Repository, filteredLis
 	id, err := askID("Task to delete: ", len(filteredList))
 	if err != nil {
 		fmt.Println(err)
+		pressEnter()
+		clear()
 		return
 	}
 
@@ -36,6 +40,8 @@ func deleteHandler(taskList *domain.TaskList, repo *repo.Repository, filteredLis
 	if err := taskList.RemoveTask(idToRemove); err != nil {
 		fmt.Println(err)
 		pressEnter()
+		clear()
+		return
 	}
 	repo.SaveAll(taskList)
 	clear()
@@ -69,8 +75,24 @@ func openHandler(taskList *domain.TaskList, repo *repo.Repository, filteredList 
 	if err := taskList.Tasks[idToRemove].OpenTask(); err != nil {
 		fmt.Println(err)
 		pressEnter()
+		clear()
 		return
 	}
 	repo.SaveAll(taskList)
 	clear()
+}
+
+func filterHandler() string {
+	newFilter := askFilter("Enter the new filter type (opened | closed | default): ")
+	fmt.Println(newFilter)
+	switch newFilter {
+	case "opened", "closed", "default":
+		clear()
+		return newFilter
+	default:
+		fmt.Println("Unknown filter. New filter is default.")
+		pressEnter()
+		clear()
+		return "default"
+	}
 }

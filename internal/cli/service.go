@@ -13,7 +13,7 @@ import (
 )
 
 func Run() error {
-	taskList := domain.NewTaskList()
+	taskMap := domain.NewTaskList()
 	jsonstorage := json_storage.JSONStorage{}
 	repo := &repo.Repository{
 		DB: map[string]repo.StorageManager{
@@ -21,50 +21,58 @@ func Run() error {
 		},
 	}
 
-	if err := repo.LoadAll("json", taskList); err != nil {
+	if err := repo.LoadAll("json", taskMap); err != nil {
 		log.Fatalf("loaging error: %v", err)
 	}
 
+	filter := "default"
 	running := true
 	for running {
-		defaultSort := taskList.DefaultSort()
+		sortedTasks := domain.Sort(taskMap.Filter(filter))
 		fmt.Println(color.HiRedString("Task list:"))
-		for i, v := range defaultSort {
-			if v.Status == domain.Closed {
-				fmt.Printf("%s: %s %s %s\nCreated at: %s\nClosed at: %s\n\n",
-					color.HiRedString((strconv.Itoa(i + 1))),
-					color.HiGreenString(v.Title),
-					color.HiRedString("-"),
-					getStatusString(v),
-					v.CreatedAt.Format("02.01.2006 | 15:04"),
-					v.CompletedAt.Format("02.01.2006 | 15:04"),
-				)
-			} else {
-				fmt.Printf("%s: %s %s %s\nCreated: %s\n\n",
-					color.HiRedString(strconv.Itoa(i+1)),
-					color.HiGreenString(v.Title),
-					color.HiRedString("-"),
-					getStatusString(v),
-					v.CreatedAt.Format("02.01.2006 | 15:04"))
-			}
+		for i, v := range sortedTasks {
+			printTask(i, v)
 		}
 		command := askCommand()
 		switch strings.ToLower(command) {
 		case "exit":
 			running = false
 		case "delete":
-			deleteHandler(taskList, repo, defaultSort)
+			deleteHandler(taskMap, repo, sortedTasks)
 		case "add":
-			addHandler(taskList, repo)
+			addHandler(taskMap, repo)
 		case "close":
-			closeHandler(taskList, repo, defaultSort)
+			closeHandler(taskMap, repo, sortedTasks)
 		case "open":
-			openHandler(taskList, repo, defaultSort)
+			openHandler(taskMap, repo, sortedTasks)
+		case "filter":
+			filter = filterHandler()
 		default:
 			fmt.Printf("%s\n", color.HiRedString("Unknown command"))
 			pressEnter()
+			clear()
 		}
 
 	}
 	return nil
+}
+
+func printTask(idx int, task *domain.Task) {
+	if task.Status == domain.Closed {
+		fmt.Printf("%s: %s %s %s\nCreated at: %s\nClosed at: %s\n\n",
+			color.HiRedString((strconv.Itoa(idx + 1))),
+			color.HiGreenString(task.Title),
+			color.HiRedString("-"),
+			getStatusString(task),
+			task.CreatedAt.Format("02.01.2006 | 15:04"),
+			task.CompletedAt.Format("02.01.2006 | 15:04"),
+		)
+	} else {
+		fmt.Printf("%s: %s %s %s\nCreated: %s\n\n",
+			color.HiRedString(strconv.Itoa(idx+1)),
+			color.HiGreenString(task.Title),
+			color.HiRedString("-"),
+			getStatusString(task),
+			task.CreatedAt.Format("02.01.2006 | 15:04"))
+	}
 }

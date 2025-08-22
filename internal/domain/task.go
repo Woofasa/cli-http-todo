@@ -32,6 +32,9 @@ func NewTask(title string, desc string) (*Task, error) {
 	if title == "" || utf8.RuneCountInString(title) > 24 {
 		return nil, ErrInvalidName
 	}
+	if desc == "" {
+		desc = "empty"
+	}
 	return &Task{
 		ID:          uuid.New().String(),
 		Title:       title,

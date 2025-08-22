@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"bufio"
 	"fmt"
 	"main/internal/domain"
 	"os"
@@ -12,19 +13,19 @@ import (
 
 func askCommand() string {
 	fmt.Println()
-	var command string
 	fmt.Println("commands:")
-	fmt.Println("\"exit\" | \"delete\" | \"add\" | \"close\" | \"open\" | \"rename\" | \"change description\" | \"filter\"")
-	fmt.Print("Make one of the commands: ")
-	fmt.Scan(&command)
+	fmt.Println("\"exit\" | \"delete\" | \"add\" | \"close\" | \"open\" ")
+	fmt.Println("\"rename\" | \"change description\" | \"filter\" | \"sort\" | \"show description\"")
+
+	command := scanCommand("Enter the command: ")
 	return command
 }
 
-func askFilter(promt string) string {
+func scanCommand(promt string) string {
 	fmt.Print(promt)
-	var filter string
-	fmt.Scan(&filter)
-	return strings.TrimSpace(filter)
+	scanner := bufio.NewScanner(os.Stdin)
+	scanner.Scan()
+	return strings.TrimSpace(scanner.Text())
 }
 
 func getStatusString(task *domain.Task) string {

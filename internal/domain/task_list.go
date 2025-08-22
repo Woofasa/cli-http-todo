@@ -22,15 +22,45 @@ func NewTaskList() *TaskList {
 	}
 }
 
-func Sort(filteredList []*Task) []*Task {
-	slices.SortFunc(filteredList, func(a, b *Task) int {
-		if a.CreatedAt.Before(b.CreatedAt) {
-			return -1
-		} else if b.CreatedAt.Before(a.CreatedAt) {
-			return 1
-		}
-		return 0
-	})
+func Sort(pattern string, filteredList []*Task) []*Task {
+	switch pattern {
+	case "created_at":
+		slices.SortFunc(filteredList, func(a, b *Task) int {
+			if a.CreatedAt.Before(b.CreatedAt) {
+				return -1
+			} else if b.CreatedAt.Before(a.CreatedAt) {
+				return 1
+			}
+			return 0
+		})
+	case "name":
+		slices.SortFunc(filteredList, func(a, b *Task) int {
+			if a.Title > b.Title {
+				return -1
+			} else if b.Title > a.Title {
+				return 1
+			}
+			return 0
+		})
+	case "completed_at":
+		slices.SortFunc(filteredList, func(a, b *Task) int {
+			if a.CompletedAt.Before(b.CompletedAt) {
+				return -1
+			} else if b.CompletedAt.Before(a.CompletedAt) {
+				return 1
+			}
+			return 0
+		})
+	default:
+		slices.SortFunc(filteredList, func(a, b *Task) int {
+			if a.CreatedAt.Before(b.CreatedAt) {
+				return -1
+			} else if b.CreatedAt.Before(a.CreatedAt) {
+				return 1
+			}
+			return 0
+		})
+	}
 	return filteredList
 }
 

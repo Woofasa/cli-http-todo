@@ -6,6 +6,8 @@ import (
 	"main/internal/domain"
 	"main/internal/repo"
 	"os"
+
+	"github.com/fatih/color"
 )
 
 func addHandler(taskList *domain.TaskList, repo *repo.Repository) (title, desc string) {
@@ -47,6 +49,21 @@ func deleteHandler(taskList *domain.TaskList, repo *repo.Repository, filteredLis
 	clear()
 }
 
+func changeDescriptionHandler(taskList *domain.TaskList, repo *repo.Repository, filteredList []*domain.Task) {
+	id, err := askID("Task to change: ", len(filteredList))
+	if err != nil {
+		fmt.Println(err)
+		pressEnter()
+		clear()
+		return
+	}
+	idToChange := filteredList[id-1].ID
+	newDesc := scanCommand("New description: ")
+	taskList.Tasks[idToChange].ChangeDescription(newDesc)
+	repo.SaveAll(taskList)
+	clear()
+}
+
 func closeHandler(taskList *domain.TaskList, repo *repo.Repository, filteredList []*domain.Task) {
 	id, err := askID("Task to close: ", len(filteredList))
 	if err != nil {
@@ -54,10 +71,11 @@ func closeHandler(taskList *domain.TaskList, repo *repo.Repository, filteredList
 		return
 	}
 
-	idToRemove := filteredList[id-1].ID
-	if err := taskList.Tasks[idToRemove].CloseTask(); err != nil {
+	idToClose := filteredList[id-1].ID
+	if err := taskList.Tasks[idToClose].CloseTask(); err != nil {
 		fmt.Println(err)
 		pressEnter()
+		clear()
 		return
 	}
 	repo.SaveAll(taskList)
@@ -83,16 +101,36 @@ func openHandler(taskList *domain.TaskList, repo *repo.Repository, filteredList 
 }
 
 func filterHandler() string {
-	newFilter := askFilter("Enter the new filter type (opened | closed | default): ")
+	newFilter := scanCommand("Enter the new filter type (opened | closed | default): ")
 	fmt.Println(newFilter)
 	switch newFilter {
 	case "opened", "closed", "default":
 		clear()
 		return newFilter
 	default:
-		fmt.Println("Unknown filter. New filter is default.")
+		fmt.Printf("%s\n", color.RedString("Unknown filter. New filter is default."))
 		pressEnter()
 		clear()
 		return "default"
 	}
+}
+
+func sortHandler() string {
+	newSort := scanCommand("Enter the new sort type (created_at | completed_at | name): ")
+	fmt.Println(newSort)
+	switch newSort {
+	case "created_at", "completed_at", "name", "default":
+		clear()
+		return newSort
+	default:
+		fmt.Printf("%s\n", color.RedString("Unknown sort. New sort is default."))
+		pressEnter()
+		clear()
+		return "default"
+	}
+}
+
+func showDescription(currentStatus bool) bool {
+	clear()
+	return !currentStatus
 }

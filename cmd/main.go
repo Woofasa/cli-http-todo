@@ -7,6 +7,6 @@ import (
 
 func main() {
 	if err := cli.Run(); err != nil {
-		log.Fatal("error starting the client")
+		log.Fatal("error starting the client: ", err)
 	}
 }

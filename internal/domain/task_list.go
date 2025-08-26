@@ -2,7 +2,6 @@ package domain
 
 import (
 	"errors"
-	"fmt"
 	"slices"
 )
 
@@ -87,12 +86,7 @@ func (t TaskList) Filter(pattern string) []*Task {
 	return filtered
 }
 
-func (t *TaskList) CreateTask(title string, desc string) error {
-	task, err := NewTask(title, desc)
-	if err != nil {
-		return fmt.Errorf("creating task error: %w", err)
-	}
-
+func (t *TaskList) CreateTask(task *Task) error {
 	if _, ok := t.Tasks[task.ID]; ok {
 		return ErrAlreadyExists
 	}

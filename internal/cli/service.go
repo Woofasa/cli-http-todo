@@ -1,11 +1,11 @@
 package cli
 
 import (
+	"context"
 	"fmt"
-	"log"
 	"main/internal/domain"
 	"main/internal/repo"
-	"main/internal/repo/json_storage"
+	"main/internal/repo/sqlite"
 	"strconv"
 	"strings"
 
@@ -14,15 +14,20 @@ import (
 
 func Run() error {
 	taskMap := domain.NewTaskList()
-	jsonstorage := json_storage.JSONStorage{}
+	ctx := context.Background()
+	sqlite, err := sqlite.New("./internal/repo/sqlite/tasks.db")
+	sqlite.Init(ctx)
+	if err != nil {
+		return fmt.Errorf("init error: %w", err)
+	}
 	repo := &repo.Repository{
-		DB: map[string]repo.StorageManager{
-			"json": jsonstorage,
+		DBs: map[string]repo.Storage{
+			"sqlite": sqlite,
 		},
 	}
-
-	if err := repo.LoadAll("json", taskMap); err != nil {
-		log.Fatalf("loaging error: %v", err)
+	taskMap.Tasks, err = repo.GetTasks(ctx, "sqlite")
+	if err != nil {
+		return fmt.Errorf("loading error: %w", err)
 	}
 
 	sort := "default"
@@ -32,6 +37,9 @@ func Run() error {
 	for running {
 		printHeading(filter, sort)
 		sortedTasks := domain.Sort(sort, taskMap.Filter(filter))
+		if len(sortedTasks) == 0 {
+			fmt.Printf("%s\n", color.HiGreenString("Add some tasks."))
+		}
 		for i, v := range sortedTasks {
 			printTask(i, v, descShown)
 		}
@@ -40,9 +48,9 @@ func Run() error {
 		case "exit":
 			running = false
 		case "delete":
-			deleteHandler(taskMap, repo, sortedTasks)
+			deleteHandler(ctx, taskMap, repo, sortedTasks)
 		case "add":
-			addHandler(taskMap, repo)
+			addHandler(ctx, taskMap, repo)
 		case "close":
 			closeHandler(taskMap, repo, sortedTasks)
 		case "open":

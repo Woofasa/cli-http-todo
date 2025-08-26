@@ -1,35 +1,36 @@
 package cli
 
 import (
-	"bufio"
+	"context"
 	"fmt"
 	"main/internal/domain"
 	"main/internal/repo"
-	"os"
 
 	"github.com/fatih/color"
 )
 
-func addHandler(taskList *domain.TaskList, repo *repo.Repository) (title, desc string) {
-	reader := bufio.NewScanner(os.Stdin)
-	fmt.Print("Task title: ")
-	reader.Scan()
-	title = reader.Text()
-	fmt.Print("Task description: ")
-	reader.Scan()
-	desc = reader.Text()
-	if err := taskList.CreateTask(title, desc); err != nil {
+func addHandler(ctx context.Context, taskList *domain.TaskList, repo *repo.Repository) {
+	title := scanCommand("Task title: ")
+	desc := scanCommand("Task description: ")
+	t, err := domain.NewTask(title, desc)
+	if err != nil {
+		fmt.Println("task create error: %w", err)
+		return
+	}
+	if err := taskList.CreateTask(t); err != nil {
 		fmt.Println(err)
 		pressEnter()
 		clear()
 		return
 	}
-	repo.SaveAll(taskList)
+	if err := repo.SaveTask(ctx, t); err != nil {
+		fmt.Println(err)
+		return
+	}
 	clear()
-	return
 }
 
-func deleteHandler(taskList *domain.TaskList, repo *repo.Repository, filteredList []*domain.Task) {
+func deleteHandler(ctx context.Context, taskList *domain.TaskList, repo *repo.Repository, filteredList []*domain.Task) {
 	id, err := askID("Task to delete: ", len(filteredList))
 	if err != nil {
 		fmt.Println(err)
@@ -45,7 +46,10 @@ func deleteHandler(taskList *domain.TaskList, repo *repo.Repository, filteredLis
 		clear()
 		return
 	}
-	repo.SaveAll(taskList)
+	if err := repo.RemoveTask(ctx, idToRemove); err != nil {
+		fmt.Println(err)
+		return
+	}
 	clear()
 }
 
@@ -60,7 +64,7 @@ func changeDescriptionHandler(taskList *domain.TaskList, repo *repo.Repository, 
 	idToChange := filteredList[id-1].ID
 	newDesc := scanCommand("New description: ")
 	taskList.Tasks[idToChange].ChangeDescription(newDesc)
-	repo.SaveAll(taskList)
+
 	clear()
 }
 
@@ -78,7 +82,7 @@ func closeHandler(taskList *domain.TaskList, repo *repo.Repository, filteredList
 		clear()
 		return
 	}
-	repo.SaveAll(taskList)
+
 	clear()
 }
 
@@ -96,7 +100,7 @@ func openHandler(taskList *domain.TaskList, repo *repo.Repository, filteredList 
 		clear()
 		return
 	}
-	repo.SaveAll(taskList)
+
 	clear()
 }
 

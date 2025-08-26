@@ -1,31 +1,44 @@
 package repo
 
 import (
-	"errors"
+	"context"
+	"fmt"
 	"main/internal/domain"
 )
 
-type StorageManager interface {
-	Save(tasks *domain.TaskList) error
-	Load(tasks *domain.TaskList) error
+type Storage interface {
+	GetTasks(ctx context.Context) (map[string]*domain.Task, error)
+	SaveTask(ctx context.Context, tasks *domain.Task) error
+	RemoveTask(ctx context.Context, id string) error
 }
 
 type Repository struct {
-	DB map[string]StorageManager
+	DBs map[string]Storage
 }
 
-func (r *Repository) SaveAll(tasks *domain.TaskList) error {
-	for _, db := range r.DB {
-		if err := db.Save(tasks); err != nil {
-			return errors.New("save all error")
+func (r *Repository) GetTasks(ctx context.Context, primaryDB string) (map[string]*domain.Task, error) {
+	primary := r.DBs[primaryDB]
+	result, err := primary.GetTasks(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("get tasks error: %w", err)
+	}
+	return result, nil
+}
+
+func (r *Repository) SaveTask(ctx context.Context, task *domain.Task) error {
+	for _, db := range r.DBs {
+		if err := db.SaveTask(ctx, task); err != nil {
+			return fmt.Errorf("save task error: %w", err)
 		}
 	}
 	return nil
 }
 
-func (r Repository) LoadAll(primaryDB string, tasks *domain.TaskList) error {
-	if err := r.DB[primaryDB].Load(tasks); err != nil {
-		return errors.New("load all error")
+func (r *Repository) RemoveTask(ctx context.Context, id string) error {
+	for _, db := range r.DBs {
+		if err := db.RemoveTask(ctx, id); err != nil {
+			return fmt.Errorf("remove task error: %w", err)
+		}
 	}
 	return nil
 }

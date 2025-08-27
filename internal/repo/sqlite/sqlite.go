@@ -39,7 +39,7 @@ func (s *SQLiteStorage) Init(ctx context.Context) error {
 		description TEXT,
 		status BOOLEAN NOT NULL DEFAULT 0,
 		created_at  TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')),
-		completed_at  TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
+		completed_at  TEXT NULL (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
 	);`
 
 	_, err := s.db.ExecContext(ctx, q)
@@ -63,16 +63,24 @@ func (s *SQLiteStorage) GetTasks(ctx context.Context) (map[string]*domain.Task, 
 	for rows.Next() {
 		var t domain.Task
 		var createdAtStr, completedAtStr string
+		const sqliteTimeLayout = "2006-01-02 15:04:05.999999999-07:00"
+
 		if err := rows.Scan(&t.ID, &t.Title, &t.Description, &t.Status, &createdAtStr, &completedAtStr); err != nil {
 			return nil, fmt.Errorf("scan error: %w", err)
 		}
-		t.CreatedAt, _ = time.Parse(time.RFC3339Nano, createdAtStr)
-		t.CompletedAt, _ = time.Parse(time.RFC3339Nano, completedAtStr)
+		t.CreatedAt, err = time.Parse(sqliteTimeLayout, createdAtStr)
+		if err != nil {
+			return nil, fmt.Errorf("sqlite error: %w", err)
+		}
+		t.CompletedAt, err = time.Parse(sqliteTimeLayout, completedAtStr)
+		if err != nil {
+			return nil, fmt.Errorf("sqlite error: %w", err)
+		}
 		result[t.ID] = &t
 	}
 
 	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("rows iteration error: %w", err)
+		return nil, fmt.Errorf("sqlite error: %w", err)
 	}
 
 	return result, nil
@@ -90,7 +98,7 @@ func (s *SQLiteStorage) SaveTask(ctx context.Context, task *domain.Task) error {
 		task.CompletedAt)
 
 	if err != nil {
-		return fmt.Errorf("task saving error: %w", err)
+		return fmt.Errorf("sqlite error: %w", err)
 	}
 	return nil
 }
@@ -100,8 +108,43 @@ func (s *SQLiteStorage) RemoveTask(ctx context.Context, id string) error {
 
 	_, err := s.db.ExecContext(ctx, q, id)
 	if err != nil {
-		return fmt.Errorf("removing error: %w", err)
+		return fmt.Errorf("sqlite error: %w", err)
 	}
 
+	return nil
+}
+
+func (s *SQLiteStorage) CloseTask(ctx context.Context, id string) error {
+	q := `UPDATE tasks SET status = ?, completed_at = ? WHERE id = ?;`
+	_, err := s.db.ExecContext(ctx, q,
+		false,
+		time.Now(),
+		id)
+	if err != nil {
+		return fmt.Errorf("sqlite error: %w", err)
+	}
+	return nil
+}
+
+func (s *SQLiteStorage) OpenTask(ctx context.Context, id string) error {
+	q := `UPDATE tasks SET status = ?, completed_at = ? WHERE id = ?;`
+	_, err := s.db.ExecContext(ctx, q,
+		true,
+		time.Time{},
+		id)
+	if err != nil {
+		return fmt.Errorf("sqlite error: %w", err)
+	}
+	return nil
+}
+
+func (s *SQLiteStorage) ChangeDesc(ctx context.Context, newDesc string, id string) error {
+	q := `UPDATE tasks SET description = ? WHERE id = ?;`
+	_, err := s.db.ExecContext(ctx, q,
+		newDesc,
+		id)
+	if err != nil {
+		return fmt.Errorf("sqlite error: %w", err)
+	}
 	return nil
 }

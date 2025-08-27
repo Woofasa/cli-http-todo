@@ -63,3 +63,8 @@ func pressEnter() {
 	fmt.Print("Press Enter to continue.")
 	fmt.Scanln()
 }
+
+func errorCheck() {
+	pressEnter()
+	clear()
+}

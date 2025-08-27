@@ -10,6 +10,9 @@ type Storage interface {
 	GetTasks(ctx context.Context) (map[string]*domain.Task, error)
 	SaveTask(ctx context.Context, tasks *domain.Task) error
 	RemoveTask(ctx context.Context, id string) error
+	CloseTask(ctx context.Context, id string) error
+	OpenTask(ctx context.Context, id string) error
+	ChangeDesc(ctx context.Context, newDesc string, id string) error
 }
 
 type Repository struct {
@@ -38,6 +41,33 @@ func (r *Repository) RemoveTask(ctx context.Context, id string) error {
 	for _, db := range r.DBs {
 		if err := db.RemoveTask(ctx, id); err != nil {
 			return fmt.Errorf("remove task error: %w", err)
+		}
+	}
+	return nil
+}
+
+func (r *Repository) CloseTask(ctx context.Context, id string) error {
+	for _, db := range r.DBs {
+		if err := db.CloseTask(ctx, id); err != nil {
+			return fmt.Errorf("close task error: %w", err)
+		}
+	}
+	return nil
+}
+
+func (r *Repository) OpenTask(ctx context.Context, id string) error {
+	for _, db := range r.DBs {
+		if err := db.OpenTask(ctx, id); err != nil {
+			return fmt.Errorf("open task error: %w", err)
+		}
+	}
+	return nil
+}
+
+func (r *Repository) ChangeDesc(ctx context.Context, newDesc string, id string) error {
+	for _, db := range r.DBs {
+		if err := db.ChangeDesc(ctx, newDesc, id); err != nil {
+			return fmt.Errorf("desc change error: %w", err)
 		}
 	}
 	return nil

@@ -27,7 +27,7 @@ func Run() error {
 	}
 	taskMap.Tasks, err = repo.GetTasks(ctx, "sqlite")
 	if err != nil {
-		return fmt.Errorf("loading error: %w", err)
+		return fmt.Errorf("run error: %w", err)
 	}
 
 	sort := "default"
@@ -47,20 +47,21 @@ func Run() error {
 		switch strings.ToLower(command) {
 		case "exit":
 			running = false
+			clear()
 		case "delete":
 			deleteHandler(ctx, taskMap, repo, sortedTasks)
 		case "add":
 			addHandler(ctx, taskMap, repo)
 		case "close":
-			closeHandler(taskMap, repo, sortedTasks)
+			closeHandler(ctx, taskMap, repo, sortedTasks)
 		case "open":
-			openHandler(taskMap, repo, sortedTasks)
+			openHandler(ctx, taskMap, repo, sortedTasks)
 		case "filter":
 			filter = filterHandler()
 		case "sort":
 			sort = sortHandler()
 		case "change description":
-			changeDescriptionHandler(taskMap, repo, sortedTasks)
+			changeDescriptionHandler(ctx, taskMap, repo, sortedTasks)
 		case "show description":
 			descShown = showDescription(descShown)
 		default:

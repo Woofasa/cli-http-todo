@@ -79,5 +79,6 @@ func (t *Task) OpenTask() error {
 		return ErrAlreadyOpened
 	}
 	t.Status = Opened
+	t.CompletedAt = time.Time{}
 	return nil
 }

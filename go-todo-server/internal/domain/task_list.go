@@ -21,10 +21,18 @@ func NewTaskList() *TaskList {
 	}
 }
 
-func Sort(pattern string, filteredList []*Task) []*Task {
+func (t TaskList) All() []*Task{
+	result := make([]*Task, 0, len(t.Tasks))
+	for _, v := range t.Tasks{
+		result = append(result, v)
+	}
+	return result
+}
+
+func (t TaskList) Sort(pattern string, taskList []*Task) []*Task {
 	switch pattern {
 	case "created_at":
-		slices.SortFunc(filteredList, func(a, b *Task) int {
+		slices.SortFunc(taskList, func(a, b *Task) int {
 			if a.CreatedAt.Before(b.CreatedAt) {
 				return -1
 			} else if b.CreatedAt.Before(a.CreatedAt) {
@@ -33,7 +41,7 @@ func Sort(pattern string, filteredList []*Task) []*Task {
 			return 0
 		})
 	case "name":
-		slices.SortFunc(filteredList, func(a, b *Task) int {
+		slices.SortFunc(taskList, func(a, b *Task) int {
 			if a.Title > b.Title {
 				return -1
 			} else if b.Title > a.Title {
@@ -42,7 +50,7 @@ func Sort(pattern string, filteredList []*Task) []*Task {
 			return 0
 		})
 	case "completed_at":
-		slices.SortFunc(filteredList, func(a, b *Task) int {
+		slices.SortFunc(taskList, func(a, b *Task) int {
 			if a.CompletedAt.Before(b.CompletedAt) {
 				return -1
 			} else if b.CompletedAt.Before(a.CompletedAt) {
@@ -51,7 +59,7 @@ func Sort(pattern string, filteredList []*Task) []*Task {
 			return 0
 		})
 	default:
-		slices.SortFunc(filteredList, func(a, b *Task) int {
+		slices.SortFunc(taskList, func(a, b *Task) int {
 			if a.CreatedAt.Before(b.CreatedAt) {
 				return -1
 			} else if b.CreatedAt.Before(a.CreatedAt) {
@@ -60,28 +68,26 @@ func Sort(pattern string, filteredList []*Task) []*Task {
 			return 0
 		})
 	}
-	return filteredList
+	return taskList
 }
 
-func (t TaskList) Filter(pattern string) []*Task {
-	filtered := make([]*Task, 0, len(t.Tasks))
+func (t TaskList) Filter(pattern string, taskList []*Task) []*Task {
+	filtered := make([]*Task, 0, len(taskList))
 	switch pattern {
 	case "opened":
-		for _, v := range t.Tasks {
+		for _, v := range taskList {
 			if v.Status == Opened {
 				filtered = append(filtered, v)
 			}
 		}
 	case "closed":
-		for _, v := range t.Tasks {
+		for _, v := range taskList {
 			if v.Status == Closed {
 				filtered = append(filtered, v)
 			}
 		}
 	default:
-		for _, v := range t.Tasks {
-			filtered = append(filtered, v)
-		}
+		return taskList
 	}
 	return filtered
 }
@@ -100,5 +106,32 @@ func (t *TaskList) RemoveTask(id string) error {
 		return ErrNotFound
 	}
 	delete(t.Tasks, id)
+	return nil
+}
+
+func (t *TaskList) ChangeDescription(uuid, desc string) error{
+	task, ok := t.Tasks[uuid]
+	if !ok{
+		return ErrNotFound
+	}
+	task.ChangeDescription(desc)
+	return nil
+}
+
+func (t *TaskList) CloseTask(uuid string) error{
+	task, ok := t.Tasks[uuid]
+	if !ok{
+		return ErrNotFound
+	}
+	task.CloseTask()
+	return nil
+}
+
+func (t *TaskList) OpenTask(uuid string) error{
+	task, ok := t.Tasks[uuid]
+	if !ok{
+		return ErrNotFound
+	}
+	task.OpenTask()
 	return nil
 }

@@ -3,32 +3,24 @@ package cli
 import (
 	"context"
 	"fmt"
+	"main/internal/app"
 	"main/internal/domain"
-	"main/internal/repo"
-	"main/internal/repo/sqlite"
 	"strconv"
 	"strings"
 
 	"github.com/fatih/color"
 )
 
-func Run() error {
-	taskMap := domain.NewTaskList()
+
+func Run(app *app.App) error {
+	handler := &Handler{App: app}
 	ctx := context.Background()
-	sqlite, err := sqlite.New("./internal/repo/sqlite/tasks.db")
-	sqlite.Init(ctx)
-	if err != nil {
-		return fmt.Errorf("init error: %w", err)
-	}
-	repo := &repo.Repository{
-		DBs: map[string]repo.Storage{
-			"sqlite": sqlite,
-		},
-	}
-	taskMap.Tasks, err = repo.GetTasks(ctx, "sqlite")
+
+	loaded, err := app.Repo.GetTasks(ctx, "sqlite")
 	if err != nil {
 		return fmt.Errorf("run error: %w", err)
 	}
+	app.TaskList.Tasks = loaded
 
 	sort := "default"
 	filter := "default"
@@ -36,7 +28,10 @@ func Run() error {
 	running := true
 	for running {
 		printHeading(filter, sort)
-		sortedTasks := domain.Sort(sort, taskMap.Filter(filter))
+		defaultList := app.TaskList.All()
+		filteredList := app.TaskList.Filter(filter, defaultList)
+		sortedTasks := app.TaskList.Sort(sort,filteredList)
+		
 		if len(sortedTasks) == 0 {
 			fmt.Printf("%s\n", color.HiGreenString("Add some tasks."))
 		}
@@ -49,19 +44,19 @@ func Run() error {
 			running = false
 			clear()
 		case "delete":
-			deleteHandler(ctx, taskMap, repo, sortedTasks)
+			handler.RemoveHandler(ctx, sortedTasks)
 		case "add":
-			addHandler(ctx, taskMap, repo)
+			handler.AddHandler(ctx)
 		case "close":
-			closeHandler(ctx, taskMap, repo, sortedTasks)
+			handler.CloseHandler(ctx, sortedTasks)
 		case "open":
-			openHandler(ctx, taskMap, repo, sortedTasks)
+			handler.OpenHandler(ctx, sortedTasks)
 		case "filter":
-			filter = filterHandler()
+			filter = askFilter()
 		case "sort":
-			sort = sortHandler()
+			sort = askSort()
 		case "change description":
-			changeDescriptionHandler(ctx, taskMap, repo, sortedTasks)
+			handler.ChangeDescriptionHandler(ctx, sortedTasks)
 		case "show description":
 			descShown = showDescription(descShown)
 		default:

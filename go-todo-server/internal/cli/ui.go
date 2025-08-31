@@ -40,10 +40,43 @@ func askID(promt string, max int) (int, error) {
 	fmt.Print(promt)
 	var id int
 	fmt.Scan(&id)
-	if id < 0 || id > max {
+	if id < 1 || id > max {
 		return 0, fmt.Errorf("invalid id")
 	}
 	return id, nil
+}
+
+func askFilter() string {
+	newFilter := scanCommand("Enter the new filter type (opened | closed | default): ")
+	fmt.Println(newFilter)
+	switch newFilter {
+	case "opened", "closed", "default":
+		clear()
+		return newFilter
+	default:
+		fmt.Printf("%s\n", color.RedString("Unknown filter. New filter is default."))
+		errorCheck()
+		return "default"
+	}
+}
+
+func askSort() string {
+	newSort := scanCommand("Enter the new sort type (created_at | completed_at | name): ")
+	fmt.Println(newSort)
+	switch newSort {
+	case "created_at", "completed_at", "name", "default":
+		clear()
+		return newSort
+	default:
+		fmt.Printf("%s\n", color.RedString("Unknown sort. New sort is default."))
+		errorCheck()
+		return "default"
+	}
+}
+
+func showDescription(currentStatus bool) bool {
+	clear()
+	return !currentStatus
 }
 
 func clear() {

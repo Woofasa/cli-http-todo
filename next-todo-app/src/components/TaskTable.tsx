@@ -6,8 +6,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Task } from "@/types";
 
-export default function TaskTable() {
+interface Props {
+  tasks: Task[];
+}
+
+export default function TaskTable({ tasks }: Props) {
   return (
     <div className="w-full border-2 border-accent rounded-b-xs">
       <Table>
@@ -21,20 +26,33 @@ export default function TaskTable() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          <TableRow>
-            <TableCell>Помыть попу</TableCell>
-            <TableCell>С мочалкой и мылом</TableCell>
-            <TableCell>Opened</TableCell>
-            <TableCell>21.02.2001</TableCell>
-            <TableCell>-</TableCell>
-          </TableRow>
-          <TableRow>
-            <TableCell>Поиграть в лол</TableCell>
-            <TableCell>Пострадать</TableCell>
-            <TableCell>Opened</TableCell>
-            <TableCell>21.02.2025</TableCell>
-            <TableCell>-</TableCell>
-          </TableRow>
+          {tasks.map((task) => (
+            <TableRow key={task.id}>
+              <TableCell>{task.title}</TableCell>
+              <TableCell>{task.description}</TableCell>
+              <TableCell>{task.status ? "Opened" : "Closed"}</TableCell>
+              <TableCell>
+                {new Intl.DateTimeFormat("ru-RU", {
+                  day: "2-digit",
+                  month: "2-digit",
+                  year: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                }).format(new Date(task.created_at))}
+              </TableCell>
+              <TableCell>
+                {task.completed_at
+                  ? new Intl.DateTimeFormat("ru-RU", {
+                      day: "2-digit",
+                      month: "2-digit",
+                      year: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    }).format(new Date(task.completed_at))
+                  : "-"}
+              </TableCell>
+            </TableRow>
+          ))}
         </TableBody>
       </Table>
     </div>

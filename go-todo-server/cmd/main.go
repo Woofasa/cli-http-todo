@@ -2,9 +2,11 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"main/internal/app"
 	"main/internal/cli"
+	httpclient "main/internal/http_client"
 )
 
 func main() {
@@ -13,8 +15,20 @@ func main() {
 	if err != nil{
 		log.Fatal(err)
 	}
-			
-	if err := cli.Run(app); err != nil {
-		log.Fatal("fatal error: ", err)
+
+	fmt.Println("choose the client version (cli | http): ")
+	var version string
+	fmt.Scan(&version)
+
+	switch version{
+	case "cli":
+		if err := cli.Run(app); err != nil {
+			log.Fatal("fatal error: ", err)
+	}
+	case "http":
+		handler := &httpclient.Handler{App: app}
+		httpclient.RunServer(handler, ":3001")
+	default:
+		fmt.Println("Unknown client name.")
 	}
 }

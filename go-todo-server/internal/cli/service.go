@@ -11,16 +11,9 @@ import (
 	"github.com/fatih/color"
 )
 
-
 func Run(app *app.App) error {
 	handler := &Handler{App: app}
 	ctx := context.Background()
-
-	loaded, err := app.Repo.GetTasks(ctx, "sqlite")
-	if err != nil {
-		return fmt.Errorf("run error: %w", err)
-	}
-	app.TaskList.Tasks = loaded
 
 	sort := "default"
 	filter := "default"
@@ -28,14 +21,20 @@ func Run(app *app.App) error {
 	running := true
 	for running {
 		printHeading(filter, sort)
-		defaultList := app.TaskList.All()
-		filteredList := app.TaskList.Filter(filter, defaultList)
-		sortedTasks := app.TaskList.Sort(sort,filteredList)
-		
-		if len(sortedTasks) == 0 {
+
+		loaded, err := app.All(ctx, "sqlite")
+		if err != nil {
+			return fmt.Errorf("run error: %w", err)
+		}
+
+		filtered := app.Filter(filter, loaded)
+		sorted := app.Sort(sort, filtered)
+		app.Filter(filter, loaded)
+
+		if len(sorted) == 0 {
 			fmt.Printf("%s\n", color.HiGreenString("Add some tasks."))
 		}
-		for i, v := range sortedTasks {
+		for i, v := range sorted {
 			printTask(i, v, descShown)
 		}
 		command := askCommand()
@@ -44,19 +43,19 @@ func Run(app *app.App) error {
 			running = false
 			clear()
 		case "delete":
-			handler.RemoveHandler(ctx, sortedTasks)
+			handler.RemoveHandler(ctx, sorted)
 		case "add":
 			handler.AddHandler(ctx)
 		case "close":
-			handler.CloseHandler(ctx, sortedTasks)
+			handler.CloseHandler(ctx, sorted)
 		case "open":
-			handler.OpenHandler(ctx, sortedTasks)
+			handler.OpenHandler(ctx, sorted)
 		case "filter":
 			filter = askFilter()
 		case "sort":
 			sort = askSort()
 		case "change description":
-			handler.ChangeDescriptionHandler(ctx, sortedTasks)
+			handler.ChangeDescriptionHandler(ctx, sorted)
 		case "show description":
 			descShown = showDescription(descShown)
 		default:
@@ -77,7 +76,7 @@ func printHeading(filter, sort string) {
 func printTask(idx int, task *domain.Task, descShown bool) {
 	switch descShown {
 	case false:
-		if task.Status == domain.Closed {
+		if !task.Status {
 			fmt.Printf("%s: %s %s %s\nCreated at: %s\nClosed at: %s\n\n",
 				color.HiRedString((strconv.Itoa(idx + 1))),
 				color.HiGreenString(task.Title),
@@ -95,7 +94,7 @@ func printTask(idx int, task *domain.Task, descShown bool) {
 				task.CreatedAt.Format("02.01.2006 | 15:04"))
 		}
 	case true:
-		if task.Status == domain.Closed {
+		if task.Status {
 			fmt.Printf("%s: %s %s %s\n%s\nCreated at: %s\nClosed at: %s\n\n",
 				color.HiRedString((strconv.Itoa(idx + 1))),
 				color.HiGreenString(task.Title),

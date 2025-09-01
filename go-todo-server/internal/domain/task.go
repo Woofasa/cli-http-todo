@@ -14,18 +14,13 @@ var ErrAlreadyOpened = errors.New("task is already opened")
 
 type Status bool
 
-var (
-	Opened Status = true
-	Closed Status = false
-)
-
 type Task struct {
-	ID          string    `db:"id"`
-	Title       string    `db:"title"`
-	Description string    `db:"description"`
-	Status      Status    `db:"status"`
-	CreatedAt   time.Time `db:"created_at"`
-	CompletedAt time.Time `db:"completed_at"`
+	ID          string    `json:"id"  db:"id"`
+	Title       string    `json:"title"  db:"title"`
+	Description string    `json:"description"  db:"description"`
+	Status      bool      `json:"status"  db:"status"`
+	CreatedAt   time.Time `json:"created_at"  db:"created_at"`
+	CompletedAt time.Time `json:"completed_at"  db:"completed_at"`
 }
 
 func NewTask(title string, desc string) (*Task, error) {
@@ -39,46 +34,8 @@ func NewTask(title string, desc string) (*Task, error) {
 		ID:          uuid.New().String(),
 		Title:       title,
 		Description: desc,
-		Status:      Opened,
+		Status:      false,
 		CreatedAt:   time.Now(),
 		CompletedAt: time.Time{},
 	}, nil
-}
-
-func (t Task) GetID() string {
-	return t.ID
-}
-
-func (t *Task) Rename(newTitle string) error {
-	if newTitle == "" {
-		return ErrInvalidName
-	}
-	t.Title = newTitle
-	return nil
-}
-
-func (t *Task) ChangeDescription(newDesc string) {
-	if newDesc == "" {
-		t.Description = "empty"
-		return
-	}
-	t.Description = newDesc
-}
-
-func (t *Task) CloseTask() error {
-	if t.Status == Closed {
-		return ErrAlreadyClosed
-	}
-	t.Status = Closed
-	t.CompletedAt = time.Now()
-	return nil
-}
-
-func (t *Task) OpenTask() error {
-	if t.Status == Opened {
-		return ErrAlreadyOpened
-	}
-	t.Status = Opened
-	t.CompletedAt = time.Time{}
-	return nil
 }

@@ -1,0 +1,17 @@
+.env
+
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+/bin/
+/build/
+/out/
+
+*.tmp
+*.log
+
+.vscode/
+.idea/

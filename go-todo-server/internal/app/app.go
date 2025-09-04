@@ -4,23 +4,25 @@ import (
 	"context"
 	"fmt"
 	"main/internal/repo"
-	"main/internal/repo/sqlite"
+	"main/internal/repo/postgres"
 )
 
 type App struct {
 	Repo *repo.Repository
 }
 
-func NewApp(ctx context.Context, dbPath string) (*App, error) {
-	sqlite, err := sqlite.New(dbPath)
+func NewApp(ctx context.Context) (*App, error) {
+	postgres, err := postgres.New()
 	if err != nil {
+		return nil, fmt.Errorf("postgres new: %w", err)
+	}
+	if err := postgres.Init(ctx); err != nil {
 		return nil, fmt.Errorf("init error: %w", err)
 	}
-	sqlite.Init(ctx)
 
 	repo := &repo.Repository{
 		DBs: map[string]repo.Storage{
-			"sqlite": sqlite,
+			"postgres": postgres,
 		},
 	}
 

@@ -64,7 +64,7 @@ func askSort() string {
 	newSort := scanCommand("Enter the new sort type (created_at | completed_at | name): ")
 	fmt.Println(newSort)
 	switch newSort {
-	case "created_at", "completed_at", "name", "default":
+	case "created_at", "name", "default", "completed_at":
 		clear()
 		return newSort
 	default:
@@ -85,7 +85,7 @@ func clear() {
 		cmd := exec.Command("cmd", "/c", "cls")
 		cmd.Stdout = os.Stdout
 		cmd.Run()
-	default: // linux, darwin, etc.
+	default:
 		cmd := exec.Command("clear")
 		cmd.Stdout = os.Stdout
 		cmd.Run()

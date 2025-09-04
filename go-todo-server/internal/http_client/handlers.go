@@ -13,7 +13,7 @@ type Handler struct {
 
 // GET /
 func (h *Handler) GetTasksHandler(w http.ResponseWriter, r *http.Request) {
-	tasks, err := h.App.All(context.Background(), "sqlite")
+	tasks, err := h.App.All(context.Background(), "postgres")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}

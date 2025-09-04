@@ -10,9 +10,8 @@ import (
 )
 
 func main() {
-	dbPath := "./internal/repo/sqlite/tasks.db"
-	app, err := app.NewApp(context.Background(), dbPath)
-	if err != nil{
+	app, err := app.NewApp(context.Background())
+	if err != nil {
 		log.Fatal(err)
 	}
 
@@ -20,11 +19,11 @@ func main() {
 	var version string
 	fmt.Scan(&version)
 
-	switch version{
+	switch version {
 	case "cli":
 		if err := cli.Run(app); err != nil {
 			log.Fatal("fatal error: ", err)
-	}
+		}
 	case "http":
 		handler := &httpclient.Handler{App: app}
 		httpclient.RunServer(handler, ":3001")

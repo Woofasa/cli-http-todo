@@ -22,7 +22,7 @@ func Run(app *app.App) error {
 	for running {
 		printHeading(filter, sort)
 
-		loaded, err := app.All(ctx, "sqlite")
+		loaded, err := app.All(ctx, "postgres")
 		if err != nil {
 			return fmt.Errorf("run error: %w", err)
 		}
@@ -94,7 +94,7 @@ func printTask(idx int, task *domain.Task, descShown bool) {
 				task.CreatedAt.Format("02.01.2006 | 15:04"))
 		}
 	case true:
-		if task.Status {
+		if !task.Status {
 			fmt.Printf("%s: %s %s %s\n%s\nCreated at: %s\nClosed at: %s\n\n",
 				color.HiRedString((strconv.Itoa(idx + 1))),
 				color.HiGreenString(task.Title),

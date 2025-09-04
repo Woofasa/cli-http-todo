@@ -15,12 +15,12 @@ var ErrAlreadyOpened = errors.New("task is already opened")
 type Status bool
 
 type Task struct {
-	ID          string    `json:"id"  db:"id"`
-	Title       string    `json:"title"  db:"title"`
-	Description string    `json:"description"  db:"description"`
-	Status      bool      `json:"status"  db:"status"`
-	CreatedAt   time.Time `json:"created_at"  db:"created_at"`
-	CompletedAt time.Time `json:"completed_at"  db:"completed_at"`
+	ID          string     `json:"id"  db:"id"`
+	Title       string     `json:"title"  db:"title"`
+	Description string     `json:"description"  db:"description"`
+	Status      bool       `json:"status"  db:"status"`
+	CreatedAt   time.Time  `json:"created_at"  db:"created_at"`
+	CompletedAt *time.Time `json:"completed_at"  db:"completed_at"`
 }
 
 func NewTask(title string, desc string) (*Task, error) {
@@ -28,14 +28,14 @@ func NewTask(title string, desc string) (*Task, error) {
 		return nil, ErrInvalidName
 	}
 	if desc == "" {
-		desc = "empty"
+		desc = "-"
 	}
 	return &Task{
 		ID:          uuid.New().String(),
 		Title:       title,
 		Description: desc,
-		Status:      false,
+		Status:      true,
 		CreatedAt:   time.Now(),
-		CompletedAt: time.Time{},
+		CompletedAt: nil,
 	}, nil
 }

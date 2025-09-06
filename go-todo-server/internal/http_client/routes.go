@@ -2,8 +2,8 @@ package httpclient
 
 import "net/http"
 
-func NewRouter(h *Handler) *http.ServeMux{
+func NewRouter(h *Handler) *http.ServeMux {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/", h.GetTasksHandler)
+	mux.HandleFunc("/", h.TasksHandler)
 	return mux
 }

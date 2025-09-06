@@ -1,5 +1,5 @@
 import { Input } from "./ui/input";
-import { Button } from "./ui/button";
+import { AddDialog } from "./AddDialog";
 
 export default function TaskToolbar() {
   return (
@@ -7,7 +7,7 @@ export default function TaskToolbar() {
       <div>
         <Input type="text" placeholder="Filter task..."></Input>
       </div>
-      <Button>Add</Button>
+      <AddDialog></AddDialog>
     </div>
   );
 }

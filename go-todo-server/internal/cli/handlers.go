@@ -12,9 +12,11 @@ type Handler struct {
 }
 
 func (h *Handler) AddHandler(ctx context.Context) {
-	title := scanCommand("Task title: ")
-	desc := scanCommand("Task description: ")
-	h.App.CreateTask(ctx, title, desc)
+	dto := app.TaskInput{
+		Title:       scanCommand("Task title: "),
+		Description: scanCommand("Task description: "),
+	}
+	h.App.CreateTask(ctx, dto)
 	clear()
 }
 

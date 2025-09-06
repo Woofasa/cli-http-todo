@@ -2,7 +2,7 @@
 
 Приложение содержит два режима: cli и http.
 
-Для запуска make run.
+Для запуска сервера: make run > http (порт 3001). Фронта: pnpm dev > localhost:3000
 
 TODO:
 

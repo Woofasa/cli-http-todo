@@ -7,8 +7,8 @@ import (
 	"slices"
 )
 
-func (a *App) CreateTask(ctx context.Context, title, desc string) error {
-	t, err := domain.NewTask(title, desc)
+func (a *App) CreateTask(ctx context.Context, dto TaskInput) error {
+	t, err := domain.NewTask(dto.Title, dto.Description)
 	if err != nil {
 		return fmt.Errorf("new task error: %w", err)
 	}

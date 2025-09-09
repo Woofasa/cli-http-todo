@@ -3,6 +3,7 @@ package postgres
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"main/internal/domain"
 	"os"
@@ -10,6 +11,10 @@ import (
 
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
+)
+
+var (
+	ErrTaskNotFound = errors.New("task not found")
 )
 
 type PostgresStorage struct {
@@ -51,6 +56,22 @@ func (s *PostgresStorage) Init(ctx context.Context) error {
 	}
 
 	return nil
+}
+
+func (s *PostgresStorage) GetTaskByID(ctx context.Context, id string) (*domain.Task, error) {
+	rows := s.db.QueryRowContext(ctx, `SELECT id, title, description, status, created_at, completed_at FROM tasks WHERE id = $1`, id)
+
+	var t domain.Task
+	var createdAt time.Time
+	var completedAt *time.Time
+
+	if err := rows.Scan(&t.ID, &t.Title, &t.Description, &t.Status, &createdAt, &completedAt); err != nil {
+		return nil, fmt.Errorf("query error: %w", err)
+	}
+	t.CreatedAt = createdAt
+	t.CompletedAt = completedAt
+
+	return &t, nil
 }
 
 func (s *PostgresStorage) GetTasks(ctx context.Context) (map[string]*domain.Task, error) {
@@ -95,35 +116,52 @@ func (s *PostgresStorage) SaveTask(ctx context.Context, task *domain.Task) error
 func (s *PostgresStorage) RemoveTask(ctx context.Context, id string) error {
 	q := `DELETE FROM tasks WHERE id = $1;`
 
-	_, err := s.db.ExecContext(ctx, q, id)
+	res, err := s.db.ExecContext(ctx, q, id)
 	if err != nil {
 		return fmt.Errorf("postgres error: %w", err)
+	}
+
+	rowsAffected, err := res.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("cannot get affected rows: %w", err)
+	}
+
+	if rowsAffected == 0 {
+		return ErrTaskNotFound
 	}
 
 	return nil
 }
 
 func (s *PostgresStorage) CloseTask(ctx context.Context, id string) error {
-	q := `UPDATE tasks SET status = $1, completed_at = $2 WHERE id = $3;`
-	_, err := s.db.ExecContext(ctx, q,
-		false,
-		time.Now(),
+	q := `UPDATE tasks SET status = false, completed_at = NOW() WHERE id = $1 AND status = true;`
+	res, err := s.db.ExecContext(ctx, q,
 		id)
 	if err != nil {
 		return fmt.Errorf("postgres error: %w", err)
 	}
+
+	rows, _ := res.RowsAffected()
+	if rows == 0 {
+		return fmt.Errorf("task is already closed: %w", err)
+	}
+
 	return nil
 }
 
 func (s *PostgresStorage) OpenTask(ctx context.Context, id string) error {
-	q := `UPDATE tasks SET status = $1, completed_at = $2 WHERE id = $3;`
-	_, err := s.db.ExecContext(ctx, q,
-		true,
-		sql.NullTime{Valid: false},
+	q := `UPDATE tasks SET status = true, completed_at = NULL WHERE id = $1 AND status = false;`
+	res, err := s.db.ExecContext(ctx, q,
 		id)
 	if err != nil {
 		return fmt.Errorf("postgres error: %w", err)
 	}
+
+	rows, _ := res.RowsAffected()
+	if rows == 0 {
+		return fmt.Errorf("task is already opened: %w", err)
+	}
+
 	return nil
 }
 

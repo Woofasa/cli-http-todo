@@ -7,6 +7,7 @@ import (
 )
 
 type Storage interface {
+	GetTaskByID(ctx context.Context, id string) (*domain.Task, error)
 	GetTasks(ctx context.Context) (map[string]*domain.Task, error)
 	SaveTask(ctx context.Context, tasks *domain.Task) error
 	RemoveTask(ctx context.Context, id string) error
@@ -17,6 +18,15 @@ type Storage interface {
 
 type Repository struct {
 	DBs map[string]Storage
+}
+
+func (r *Repository) GetTaskByID(ctx context.Context, id string, primaryDB string) (*domain.Task, error) {
+	primary := r.DBs[primaryDB]
+	result, err := primary.GetTaskByID(ctx, id)
+	if err != nil {
+		return nil, fmt.Errorf("get tasks error: %w", err)
+	}
+	return result, nil
 }
 
 func (r *Repository) GetTasks(ctx context.Context, primaryDB string) (map[string]*domain.Task, error) {

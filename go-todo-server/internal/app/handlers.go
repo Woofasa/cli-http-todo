@@ -7,16 +7,24 @@ import (
 	"slices"
 )
 
-func (a *App) CreateTask(ctx context.Context, dto TaskInput) error {
+func (a *App) GetTaskByID(ctx context.Context, id string, primaryDB string) (*domain.Task, error) {
+	t, err := a.Repo.GetTaskByID(ctx, id, primaryDB)
+	if err != nil {
+		return nil, fmt.Errorf("getting task: %w", err)
+	}
+	return t, nil
+}
+
+func (a *App) CreateTask(ctx context.Context, dto TaskInput) (*domain.Task, error) {
 	t, err := domain.NewTask(dto.Title, dto.Description)
 	if err != nil {
-		return fmt.Errorf("new task error: %w", err)
+		return nil, fmt.Errorf("new task error: %w", err)
 	}
 
 	if err := a.Repo.SaveTask(ctx, t); err != nil {
-		return fmt.Errorf("save task error: %w", err)
+		return nil, fmt.Errorf("save task error: %w", err)
 	}
-	return nil
+	return t, nil
 }
 
 func (a *App) DeleteTask(ctx context.Context, uuid string) error {
@@ -52,7 +60,7 @@ func (a *App) All(ctx context.Context, primaryDB string) ([]*domain.Task, error)
 	taskMap, err := a.Repo.GetTasks(ctx, primaryDB)
 	taskList := make([]*domain.Task, 0, len(taskMap))
 	if err != nil {
-		return nil, fmt.Errorf("getting task: %w", err)
+		return nil, fmt.Errorf("getting tasks: %w", err)
 	}
 	for _, v := range taskMap {
 		taskList = append(taskList, v)

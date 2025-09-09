@@ -9,8 +9,6 @@ import (
 )
 
 var ErrInvalidName = errors.New("invalid name")
-var ErrAlreadyClosed = errors.New("task is already closed")
-var ErrAlreadyOpened = errors.New("task is already opened")
 
 type Status bool
 

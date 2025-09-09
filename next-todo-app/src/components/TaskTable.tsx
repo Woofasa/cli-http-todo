@@ -1,3 +1,5 @@
+"use client";
+
 import {
   Table,
   TableBody,
@@ -7,12 +9,15 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Task } from "@/types";
+import { Button } from "./ui/button";
 
 interface Props {
-  tasks: Task[];
+  data: Task[];
+  onDelete: (id: string) => void;
+  onToggleStatus: (id: string) => void;
 }
 
-export default function TaskTable({ tasks }: Props) {
+export default function TaskTable({ data, onDelete, onToggleStatus }: Props) {
   return (
     <div className="w-full border-2 border-accent rounded-b-xs">
       <Table>
@@ -23,33 +28,31 @@ export default function TaskTable({ tasks }: Props) {
             <TableHead>Status</TableHead>
             <TableHead>Created at</TableHead>
             <TableHead>Completed at</TableHead>
+            <TableHead>Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {tasks.map((task) => (
+          {data.map((task) => (
             <TableRow key={task.id}>
               <TableCell>{task.title}</TableCell>
               <TableCell>{task.description}</TableCell>
-              <TableCell>{task.status ? "Opened" : "Closed"}</TableCell>
               <TableCell>
-                {new Intl.DateTimeFormat("ru-RU", {
-                  day: "2-digit",
-                  month: "2-digit",
-                  year: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                }).format(new Date(task.created_at))}
+                <Button onClick={() => onToggleStatus(task.id)}>
+                  {task.status ? "Opened" : "Closed"}
+                </Button>
+              </TableCell>
+              <TableCell>
+                {new Date(task.created_at).toLocaleString()}
               </TableCell>
               <TableCell>
                 {task.completed_at
-                  ? new Intl.DateTimeFormat("ru-RU", {
-                      day: "2-digit",
-                      month: "2-digit",
-                      year: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    }).format(new Date(task.completed_at))
+                  ? new Date(task.completed_at).toLocaleString()
                   : "-"}
+              </TableCell>
+              <TableCell>
+                <Button variant="ghost" onClick={() => onDelete(task.id)}>
+                  X
+                </Button>
               </TableCell>
             </TableRow>
           ))}

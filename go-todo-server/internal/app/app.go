@@ -8,7 +8,7 @@ import (
 )
 
 type App struct {
-	Repo *repo.Repository
+	Repo repo.Storage
 }
 
 func NewApp(ctx context.Context) (*App, error) {
@@ -20,13 +20,7 @@ func NewApp(ctx context.Context) (*App, error) {
 		return nil, fmt.Errorf("init error: %w", err)
 	}
 
-	repo := &repo.Repository{
-		DBs: map[string]repo.Storage{
-			"postgres": postgres,
-		},
-	}
-
 	return &App{
-		Repo: repo,
+		Repo: postgres,
 	}, nil
 }

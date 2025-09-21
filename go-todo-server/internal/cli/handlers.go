@@ -36,52 +36,52 @@ func (h *Handler) RemoveHandler(ctx context.Context, filteredList []*domain.Task
 }
 
 func (h *Handler) ChangeDescriptionHandler(ctx context.Context, filteredList []*domain.Task) {
-	id, err := askID("Task to change: ", len(filteredList))
-	if err != nil {
-		fmt.Println(err)
-		errorCheck()
-		return
-	}
-	uuid := filteredList[id-1].ID
-	newDesc := scanCommand("New description: ")
-	if err := h.App.ChangeDescription(ctx, newDesc, uuid); err != nil {
-		fmt.Println(err)
-		errorCheck()
-		return
-	}
+	// id, err := askID("Task to change: ", len(filteredList))
+	// if err != nil {
+	// 	fmt.Println(err)
+	// 	errorCheck()
+	// 	return
+	// }
+	// uuid := filteredList[id-1].ID
+	// newDesc := scanCommand("New description: ")
+	// if err := h.App.ChangeDescription(ctx, newDesc, uuid); err != nil {
+	// 	fmt.Println(err)
+	// 	errorCheck()
+	// 	return
+	// }
 	clear()
 }
 
 func (h *Handler) CloseHandler(ctx context.Context, filteredList []*domain.Task) {
-	id, err := askID("Task to close: ", len(filteredList))
-	if err != nil {
-		fmt.Println(err)
-		errorCheck()
-		return
-	}
+	// id, err := askID("Task to close: ", len(filteredList))
+	// if err != nil {
+	// 	fmt.Println(err)
+	// 	errorCheck()
+	// 	return
+	// }
 
-	uuid := filteredList[id-1].ID
-	if err := h.App.CloseTask(ctx, uuid); err != nil {
-		fmt.Println(err)
-		errorCheck()
-		return
-	}
+	// uuid := filteredList[id-1].ID
+	// if err := h.App.CloseTask(ctx, uuid); err != nil {
+	// 	fmt.Println(err)
+	// 	errorCheck()
+	// 	return
+	// }
 	clear()
 }
 
 func (h *Handler) OpenHandler(ctx context.Context, filteredList []*domain.Task) {
-	id, err := askID("Task to open: ", len(filteredList))
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
+	// id, err := askID("Task to open: ", len(filteredList))
+	// if err != nil {
+	// 	fmt.Println(err)
+	// 	return
+	// }
 
-	uuid := filteredList[id-1].ID
-	if err := h.App.OpenTask(ctx, uuid); err != nil {
-		fmt.Println(err)
-		errorCheck()
-		return
-	}
+	// uuid := filteredList[id-1].ID
+	// if err := h.App.OpenTask(ctx, uuid); err != nil {
+	// 	fmt.Println(err)
+	// 	errorCheck()
+	// 	return
+	// }
 
 	clear()
 }

@@ -17,11 +17,11 @@ var (
 	ErrTaskNotFound = errors.New("task not found")
 )
 
-type PostgresStorage struct {
+type TasksRepository struct {
 	db *sql.DB
 }
 
-func New() (*PostgresStorage, error) {
+func New() (*TasksRepository, error) {
 	if err := godotenv.Load(); err != nil {
 		return nil, fmt.Errorf("cant load env file: %v", &err)
 	}
@@ -35,12 +35,12 @@ func New() (*PostgresStorage, error) {
 		return nil, fmt.Errorf("database doesnt answer %w", err)
 	}
 
-	return &PostgresStorage{
+	return &TasksRepository{
 		db: db,
 	}, nil
 }
 
-func (s *PostgresStorage) Init(ctx context.Context) error {
+func (s *TasksRepository) Init(ctx context.Context) error {
 	q := `CREATE TABLE IF NOT EXISTS tasks(
 		id UUID PRIMARY KEY,
 		title TEXT NOT NULL,
@@ -58,7 +58,7 @@ func (s *PostgresStorage) Init(ctx context.Context) error {
 	return nil
 }
 
-func (s *PostgresStorage) GetTaskByID(ctx context.Context, id string) (*domain.Task, error) {
+func (s *TasksRepository) GetTaskByID(ctx context.Context, id string) (*domain.Task, error) {
 	rows := s.db.QueryRowContext(ctx, `SELECT id, title, description, status, created_at, completed_at FROM tasks WHERE id = $1`, id)
 
 	var t domain.Task
@@ -74,14 +74,14 @@ func (s *PostgresStorage) GetTaskByID(ctx context.Context, id string) (*domain.T
 	return &t, nil
 }
 
-func (s *PostgresStorage) GetTasks(ctx context.Context) (map[string]*domain.Task, error) {
+func (s *TasksRepository) GetTasks(ctx context.Context) ([]*domain.Task, error) {
 	rows, err := s.db.QueryContext(ctx, `SELECT id, title, description, status, created_at, completed_at FROM tasks`)
 	if err != nil {
 		return nil, fmt.Errorf("query error: %w", err)
 	}
 	defer rows.Close()
 
-	result := make(map[string]*domain.Task)
+	result := make([]*domain.Task, 0)
 	for rows.Next() {
 		var t domain.Task
 		var createdAt time.Time
@@ -91,12 +91,12 @@ func (s *PostgresStorage) GetTasks(ctx context.Context) (map[string]*domain.Task
 		t.CreatedAt = createdAt
 		t.CompletedAt = completedAt
 
-		result[t.ID] = &t
+		result = append(result, &t)
 	}
 	return result, nil
 }
 
-func (s *PostgresStorage) SaveTask(ctx context.Context, task *domain.Task) error {
+func (s *TasksRepository) SaveTask(ctx context.Context, task *domain.Task) error {
 	q := `INSERT INTO tasks (id, title, description, status, created_at, completed_at) VALUES ($1, $2, $3, $4, $5, $6);`
 
 	_, err := s.db.ExecContext(ctx, q,
@@ -113,7 +113,21 @@ func (s *PostgresStorage) SaveTask(ctx context.Context, task *domain.Task) error
 	return nil
 }
 
-func (s *PostgresStorage) RemoveTask(ctx context.Context, id string) error {
+func (s *TasksRepository) UpdateTask(ctx context.Context, task *domain.Task) error {
+	q := `UPDATE tasks SET title=$1, description=$2, status=$3 WHERE id=$4`
+	_, err := s.db.ExecContext(ctx, q,
+		task.Title,
+		task.Description,
+		task.Status,
+		task.ID)
+
+	if err != nil {
+		return fmt.Errorf("postgres update exec: %w", err)
+	}
+	return nil
+}
+
+func (s *TasksRepository) RemoveTask(ctx context.Context, id string) error {
 	q := `DELETE FROM tasks WHERE id = $1;`
 
 	res, err := s.db.ExecContext(ctx, q, id)
@@ -133,7 +147,7 @@ func (s *PostgresStorage) RemoveTask(ctx context.Context, id string) error {
 	return nil
 }
 
-func (s *PostgresStorage) CloseTask(ctx context.Context, id string) error {
+func (s *TasksRepository) CloseTask(ctx context.Context, id string) error {
 	q := `UPDATE tasks SET status = false, completed_at = NOW() WHERE id = $1 AND status = true;`
 	res, err := s.db.ExecContext(ctx, q,
 		id)
@@ -149,29 +163,29 @@ func (s *PostgresStorage) CloseTask(ctx context.Context, id string) error {
 	return nil
 }
 
-func (s *PostgresStorage) OpenTask(ctx context.Context, id string) error {
-	q := `UPDATE tasks SET status = true, completed_at = NULL WHERE id = $1 AND status = false;`
-	res, err := s.db.ExecContext(ctx, q,
-		id)
+func (s *TasksRepository) Filtered(ctx context.Context, pattern string) ([]*domain.Task, error) {
+	q := `SELECT id, title, description, status, created_at, completed_at FROM tasks WHERE status=$1;`
+
+	rows, err := s.db.QueryContext(ctx, q, pattern)
 	if err != nil {
-		return fmt.Errorf("postgres error: %w", err)
+		return nil, fmt.Errorf("filter postgres error")
 	}
+	defer rows.Close()
 
-	rows, _ := res.RowsAffected()
-	if rows == 0 {
-		return fmt.Errorf("task is already opened: %w", err)
+	tasks := make([]*domain.Task, 0)
+
+	for rows.Next() {
+		var t domain.Task
+		var createdAt time.Time
+		var completedAt *time.Time
+		if err := rows.Scan(&t.ID, &t.Title, &t.Description, &t.Status, &createdAt, &completedAt); err != nil {
+			return nil, fmt.Errorf("filter scan error: %w", err)
+		}
+
+		t.CreatedAt = createdAt
+		t.CompletedAt = completedAt
+
+		tasks = append(tasks, &t)
 	}
-
-	return nil
-}
-
-func (s *PostgresStorage) ChangeDesc(ctx context.Context, newDesc string, id string) error {
-	q := `UPDATE tasks SET description = $1 WHERE id = $2;`
-	_, err := s.db.ExecContext(ctx, q,
-		newDesc,
-		id)
-	if err != nil {
-		return fmt.Errorf("postgres error: %w", err)
-	}
-	return nil
+	return tasks, nil
 }

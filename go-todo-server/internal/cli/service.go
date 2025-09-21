@@ -22,7 +22,7 @@ func Run(app *app.App) error {
 	for running {
 		printHeading(filter, sort)
 
-		loaded, err := app.All(ctx, "postgres")
+		loaded, err := app.All(ctx)
 		if err != nil {
 			return fmt.Errorf("run error: %w", err)
 		}

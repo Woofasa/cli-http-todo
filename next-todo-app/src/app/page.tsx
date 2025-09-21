@@ -3,11 +3,11 @@
 import { useState, useEffect } from "react";
 import TaskTable from "@/components/TaskTable";
 import TaskToolbar from "@/components/TaskToolbar";
-import { getTasks } from "./api/tasks/route";
 import { Task } from "@/types";
-import HandleDelete from "./api/tasks/deleteTask";
+import { getTasks } from "./api/tasks/route";
 import AddTask from "./api/tasks/addTask";
-import UpdateTaskStatus from "./api/tasks/updateStatus";
+import HandleDelete from "./api/tasks/deleteTask";
+import UpdateTask from "./api/tasks/updateTask";
 
 export default function Home() {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -16,31 +16,28 @@ export default function Home() {
     getTasks().then(setTasks);
   }, []);
 
-  const onDelete = async (id: string) => {
-    await HandleDelete(id);
-    setTasks((prev) => prev.filter((t) => t.id !== id));
-  };
-
   const onAdd = async (title: string, description: string) => {
     const newTask = await AddTask(title, description);
     setTasks((prev) => [...prev, newTask]);
   };
 
-  const onToggleStatus = async (id: string) => {
-    const updatedTask = await UpdateTaskStatus(id);
-    if (!updatedTask) return;
+  const onDelete = async (id: string) => {
+    await HandleDelete(id);
+    setTasks((prev) => prev.filter((t) => t.id !== id));
+  };
 
-    setTasks((prev) =>
-      prev.map((t) =>
-        t.id === updatedTask.id
-          ? {
-              ...t,
-              status: updatedTask.status,
-              completed_at: updatedTask.completed_at,
-            }
-          : t
-      )
-    );
+  const onUpdateTask = async (
+    id: string,
+    dto: { title?: string; description?: string; status?: boolean }
+  ) => {
+    try {
+      const updated = await UpdateTask(id, dto);
+      setTasks((prev) =>
+        prev.map((t) => (t.id === id ? { ...t, ...updated } : t))
+      );
+    } catch (err) {
+      console.error("Ошибка при обновлении задачи:", err);
+    }
   };
 
   return (
@@ -48,8 +45,9 @@ export default function Home() {
       <TaskToolbar onAdd={onAdd} />
       <TaskTable
         data={tasks}
+        setData={setTasks}
         onDelete={onDelete}
-        onToggleStatus={onToggleStatus}
+        onUpdateTask={onUpdateTask}
       />
     </div>
   );

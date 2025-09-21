@@ -4,11 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"main/internal/app"
 	"main/internal/domain"
 	"net/http"
-	"time"
 )
 
 type Handler struct {
@@ -18,7 +16,7 @@ type Handler struct {
 func (h *Handler) TasksHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
-		tasks, err := h.App.All(context.Background(), "postgres")
+		tasks, err := h.App.All(context.Background())
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -59,31 +57,22 @@ func (h *Handler) TasksHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	case http.MethodPatch:
 		id := r.URL.Query().Get("id")
-		task, err := h.App.GetTaskByID(context.Background(), id, "postgres")
-		if err != nil {
+		var dto app.UpdateDTO
+
+		if err := json.NewDecoder(r.Body).Decode(&dto); err != nil {
 			http.Error(w, "bad request", http.StatusBadRequest)
 			return
 		}
 
-		fmt.Println(task.Status)
-
-		var updateErr error
-		if task.Status {
-			updateErr = h.App.CloseTask(context.Background(), id)
-		} else {
-			updateErr = h.App.OpenTask(context.Background(), id)
-		}
-		if updateErr != nil {
+		if err := h.App.UpdateTask(context.Background(), id, dto); err != nil {
 			http.Error(w, "internal error", http.StatusInternalServerError)
 			return
 		}
 
-		task.Status = !task.Status
-		now := time.Now()
-		if task.Status {
-			task.CompletedAt = nil
-		} else {
-			task.CompletedAt = &now
+		task, err := h.App.GetTaskByID(context.Background(), id)
+		if err != nil {
+			http.Error(w, "internal error", http.StatusBadRequest)
+			return
 		}
 
 		w.Header().Set("Content-Type", "application/json")

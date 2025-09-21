@@ -7,8 +7,8 @@ import (
 	"slices"
 )
 
-func (a *App) GetTaskByID(ctx context.Context, id string, primaryDB string) (*domain.Task, error) {
-	t, err := a.Repo.GetTaskByID(ctx, id, primaryDB)
+func (a *App) GetTaskByID(ctx context.Context, id string) (*domain.Task, error) {
+	t, err := a.Repo.GetTaskByID(ctx, id)
 	if err != nil {
 		return nil, fmt.Errorf("getting task: %w", err)
 	}
@@ -34,38 +34,12 @@ func (a *App) DeleteTask(ctx context.Context, uuid string) error {
 	return nil
 }
 
-func (a *App) ChangeDescription(ctx context.Context, desc string, uuid string) error {
-
-	if err := a.Repo.ChangeDesc(ctx, desc, uuid); err != nil {
-		return fmt.Errorf("change desc: %w", err)
-	}
-	return nil
-}
-
-func (a *App) CloseTask(ctx context.Context, uuid string) error {
-	if err := a.Repo.CloseTask(ctx, uuid); err != nil {
-		return fmt.Errorf("storage close task: %w", err)
-	}
-	return nil
-}
-
-func (a *App) OpenTask(ctx context.Context, uuid string) error {
-	if err := a.Repo.OpenTask(ctx, uuid); err != nil {
-		return fmt.Errorf("storage open task: %w", err)
-	}
-	return nil
-}
-
-func (a *App) All(ctx context.Context, primaryDB string) ([]*domain.Task, error) {
-	taskMap, err := a.Repo.GetTasks(ctx, primaryDB)
-	taskList := make([]*domain.Task, 0, len(taskMap))
+func (a *App) All(ctx context.Context) ([]*domain.Task, error) {
+	taskMap, err := a.Repo.GetTasks(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("getting tasks: %w", err)
+		return nil, fmt.Errorf("app getting tasks: %w", err)
 	}
-	for _, v := range taskMap {
-		taskList = append(taskList, v)
-	}
-	return taskList, nil
+	return taskMap, nil
 }
 
 func (a *App) Sort(pattern string, list []*domain.Task) []*domain.Task {
@@ -139,4 +113,22 @@ func (a *App) Filter(pattern string, list []*domain.Task) []*domain.Task {
 		return list
 	}
 	return filtered
+}
+
+func (a *App) UpdateTask(ctx context.Context, id string, dto UpdateDTO) error {
+	t, err := a.GetTaskByID(ctx, id)
+	if err != nil {
+		return err
+	}
+	if dto.Title != nil {
+		t.Title = *dto.Title
+	}
+	if dto.Description != nil {
+		t.Description = *dto.Description
+	}
+	if dto.Status != nil {
+		t.Status = *dto.Status
+	}
+
+	return a.Repo.UpdateTask(ctx, t)
 }

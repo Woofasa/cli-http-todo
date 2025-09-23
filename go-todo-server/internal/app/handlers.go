@@ -127,7 +127,9 @@ func (a *App) UpdateTask(ctx context.Context, id string, dto UpdateDTO) error {
 		t.Description = *dto.Description
 	}
 	if dto.Status != nil {
-		t.Status = *dto.Status
+		if err := t.ChangeStatus(*dto.Status); err != nil {
+			return err
+		}
 	}
 
 	return a.Repo.UpdateTask(ctx, t)

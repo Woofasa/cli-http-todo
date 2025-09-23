@@ -2,6 +2,7 @@ package domain
 
 import (
 	"errors"
+	"fmt"
 	"time"
 	"unicode/utf8"
 
@@ -36,4 +37,20 @@ func NewTask(title string, desc string) (*Task, error) {
 		CreatedAt:   time.Now(),
 		CompletedAt: nil,
 	}, nil
+}
+
+func (t *Task) ChangeStatus(status bool) error {
+	if t.Status == status {
+		return fmt.Errorf("task is already %t", status)
+	}
+	switch t.Status {
+	case true:
+		t.Status = false
+		currentTime := time.Now()
+		t.CompletedAt = &currentTime
+	case false:
+		t.Status = true
+		t.CompletedAt = nil
+	}
+	return nil
 }

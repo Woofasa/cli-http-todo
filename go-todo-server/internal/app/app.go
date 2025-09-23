@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"fmt"
+	"main/internal/config"
 	"main/internal/repo"
 	"main/internal/repo/postgres"
 )
@@ -12,7 +13,8 @@ type App struct {
 }
 
 func NewApp(ctx context.Context) (*App, error) {
-	postgres, err := postgres.New()
+	cfg := config.MustLoad()
+	postgres, err := postgres.New(cfg)
 	if err != nil {
 		return nil, fmt.Errorf("postgres new: %w", err)
 	}

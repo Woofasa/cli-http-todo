@@ -5,11 +5,10 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"main/internal/config"
 	"main/internal/domain"
-	"os"
 	"time"
 
-	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 )
 
@@ -17,16 +16,15 @@ var (
 	ErrTaskNotFound = errors.New("task not found")
 )
 
-type TasksRepository struct {
+type Tasks struct {
 	db *sql.DB
 }
 
-func New() (*TasksRepository, error) {
-	if err := godotenv.Load(); err != nil {
-		return nil, fmt.Errorf("cant load env file: %v", &err)
-	}
+func New(cfg *config.Config) (*Tasks, error) {
+	dsn := fmt.Sprintf("postgres://%s:%s@%s:%d/%s",
+		cfg.Database.User, cfg.Database.Password, cfg.Database.Host, cfg.Database.Port, cfg.Database.Name)
 
-	db, err := sql.Open("postgres", os.Getenv("DATABASE_URL"))
+	db, err := sql.Open("postgres", dsn)
 	if err != nil {
 		return nil, fmt.Errorf("cannot open database: %w", err)
 	}
@@ -35,12 +33,12 @@ func New() (*TasksRepository, error) {
 		return nil, fmt.Errorf("database doesnt answer %w", err)
 	}
 
-	return &TasksRepository{
+	return &Tasks{
 		db: db,
 	}, nil
 }
 
-func (s *TasksRepository) Init(ctx context.Context) error {
+func (s *Tasks) Init(ctx context.Context) error {
 	q := `CREATE TABLE IF NOT EXISTS tasks(
 		id UUID PRIMARY KEY,
 		title TEXT NOT NULL,
@@ -58,7 +56,7 @@ func (s *TasksRepository) Init(ctx context.Context) error {
 	return nil
 }
 
-func (s *TasksRepository) GetTaskByID(ctx context.Context, id string) (*domain.Task, error) {
+func (s *Tasks) GetTaskByID(ctx context.Context, id string) (*domain.Task, error) {
 	rows := s.db.QueryRowContext(ctx, `SELECT id, title, description, status, created_at, completed_at FROM tasks WHERE id = $1`, id)
 
 	var t domain.Task
@@ -74,8 +72,8 @@ func (s *TasksRepository) GetTaskByID(ctx context.Context, id string) (*domain.T
 	return &t, nil
 }
 
-func (s *TasksRepository) GetTasks(ctx context.Context) ([]*domain.Task, error) {
-	rows, err := s.db.QueryContext(ctx, `SELECT id, title, description, status, created_at, completed_at FROM tasks`)
+func (s *Tasks) GetTasks(ctx context.Context) ([]*domain.Task, error) {
+	rows, err := s.db.QueryContext(ctx, `SELECT id, title, description, status, created_at, completed_at FROM tasks ORDER BY created_at`)
 	if err != nil {
 		return nil, fmt.Errorf("query error: %w", err)
 	}
@@ -96,7 +94,7 @@ func (s *TasksRepository) GetTasks(ctx context.Context) ([]*domain.Task, error) 
 	return result, nil
 }
 
-func (s *TasksRepository) SaveTask(ctx context.Context, task *domain.Task) error {
+func (s *Tasks) SaveTask(ctx context.Context, task *domain.Task) error {
 	q := `INSERT INTO tasks (id, title, description, status, created_at, completed_at) VALUES ($1, $2, $3, $4, $5, $6);`
 
 	_, err := s.db.ExecContext(ctx, q,
@@ -113,12 +111,13 @@ func (s *TasksRepository) SaveTask(ctx context.Context, task *domain.Task) error
 	return nil
 }
 
-func (s *TasksRepository) UpdateTask(ctx context.Context, task *domain.Task) error {
-	q := `UPDATE tasks SET title=$1, description=$2, status=$3 WHERE id=$4`
+func (s *Tasks) UpdateTask(ctx context.Context, task *domain.Task) error {
+	q := `UPDATE tasks SET title=$1, description=$2, status=$3, completed_at=$4 WHERE id=$5`
 	_, err := s.db.ExecContext(ctx, q,
 		task.Title,
 		task.Description,
 		task.Status,
+		task.CompletedAt,
 		task.ID)
 
 	if err != nil {
@@ -127,7 +126,7 @@ func (s *TasksRepository) UpdateTask(ctx context.Context, task *domain.Task) err
 	return nil
 }
 
-func (s *TasksRepository) RemoveTask(ctx context.Context, id string) error {
+func (s *Tasks) RemoveTask(ctx context.Context, id string) error {
 	q := `DELETE FROM tasks WHERE id = $1;`
 
 	res, err := s.db.ExecContext(ctx, q, id)
@@ -147,7 +146,7 @@ func (s *TasksRepository) RemoveTask(ctx context.Context, id string) error {
 	return nil
 }
 
-func (s *TasksRepository) CloseTask(ctx context.Context, id string) error {
+func (s *Tasks) CloseTask(ctx context.Context, id string) error {
 	q := `UPDATE tasks SET status = false, completed_at = NOW() WHERE id = $1 AND status = true;`
 	res, err := s.db.ExecContext(ctx, q,
 		id)
@@ -163,7 +162,7 @@ func (s *TasksRepository) CloseTask(ctx context.Context, id string) error {
 	return nil
 }
 
-func (s *TasksRepository) Filtered(ctx context.Context, pattern string) ([]*domain.Task, error) {
+func (s *Tasks) Filtered(ctx context.Context, pattern string) ([]*domain.Task, error) {
 	q := `SELECT id, title, description, status, created_at, completed_at FROM tasks WHERE status=$1;`
 
 	rows, err := s.db.QueryContext(ctx, q, pattern)

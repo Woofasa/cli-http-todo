@@ -171,11 +171,23 @@ export default function TaskTable({
 
               {/* Dates */}
               <TableCell className="w-42 text-sm">
-                {new Date(task.created_at).toLocaleDateString()}
+                {new Date(task.created_at).toLocaleString("ru-RU", {
+                  year: "numeric",
+                  month: "2-digit",
+                  day: "2-digit",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
               </TableCell>
               <TableCell className="w-42 text-sm">
                 {task.completed_at
-                  ? new Date(task.completed_at).toLocaleDateString()
+                  ? new Date(task.completed_at).toLocaleString("ru-RU", {
+                      year: "numeric",
+                      month: "2-digit",
+                      day: "2-digit",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })
                   : "-"}
               </TableCell>
 

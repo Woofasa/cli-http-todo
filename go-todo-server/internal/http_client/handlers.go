@@ -53,7 +53,7 @@ func (h *Handler) TasksHandler(w http.ResponseWriter, r *http.Request) {
 	case http.MethodDelete:
 		id := r.URL.Query().Get("id")
 		if err := h.App.DeleteTask(context.Background(), id); err != nil {
-			http.Error(w, "something happened", http.StatusInternalServerError)
+			http.Error(w, "bad request", http.StatusBadRequest)
 		}
 	case http.MethodPatch:
 		id := r.URL.Query().Get("id")
@@ -71,7 +71,7 @@ func (h *Handler) TasksHandler(w http.ResponseWriter, r *http.Request) {
 
 		task, err := h.App.GetTaskByID(context.Background(), id)
 		if err != nil {
-			http.Error(w, "internal error", http.StatusBadRequest)
+			http.Error(w, "bad request", http.StatusBadRequest)
 			return
 		}
 

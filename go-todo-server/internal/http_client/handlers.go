@@ -4,19 +4,19 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"main/internal/app"
 	"main/internal/domain"
+	"main/internal/usecase"
 	"net/http"
 )
 
 type Handler struct {
-	App *app.App
+	App *usecase.App
 }
 
 func (h *Handler) TasksHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
-		tasks, err := h.App.All(context.Background())
+		tasks, err := h.App.AllTasks(context.Background())
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -27,7 +27,7 @@ func (h *Handler) TasksHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		w.Header().Set("Content-Type", "application/json")
 	case http.MethodPost:
-		var dto app.TaskInput
+		var dto usecase.TaskInput
 		if err := json.NewDecoder(r.Body).Decode(&dto); err != nil {
 			http.Error(w, "bad request", http.StatusBadRequest)
 			return
@@ -57,7 +57,7 @@ func (h *Handler) TasksHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	case http.MethodPatch:
 		id := r.URL.Query().Get("id")
-		var dto app.UpdateDTO
+		var dto usecase.UpdateTaskDTO
 
 		if err := json.NewDecoder(r.Body).Decode(&dto); err != nil {
 			http.Error(w, "bad request", http.StatusBadRequest)
@@ -81,6 +81,49 @@ func (h *Handler) TasksHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+	default:
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+}
+
+func (h *Handler) UserHandler(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodGet:
+		users, err := h.App.UserStorage.GetUsers(context.Background())
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		if err := json.NewEncoder(w).Encode(users); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+
+	case http.MethodPost:
+		var dto usecase.UserInput
+		if err := json.NewDecoder(r.Body).Decode(&dto); err != nil {
+			http.Error(w, "bad request", http.StatusBadRequest)
+			return
+		}
+		u, err := h.App.CreateUser(context.Background(), dto)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		if err := json.NewEncoder(w).Encode(u); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+	case http.MethodDelete:
+		id := r.URL.Query().Get("id")
+		if err := h.App.UserStorage.RemoveUser(context.Background(), id); err != nil {
+			http.Error(w, "bad request. id not found", http.StatusBadRequest)
+			return
+		}
 	default:
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		return

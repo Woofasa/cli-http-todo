@@ -2,10 +2,8 @@ package postgres
 
 import (
 	"context"
-	"database/sql"
 	"errors"
 	"fmt"
-	"main/internal/config"
 	"main/internal/domain"
 	"time"
 
@@ -17,25 +15,13 @@ var (
 )
 
 type Tasks struct {
-	db *sql.DB
+	db *DB
 }
 
-func New(cfg *config.Config) (*Tasks, error) {
-	dsn := fmt.Sprintf("postgres://%s:%s@%s:%d/%s",
-		cfg.Database.User, cfg.Database.Password, cfg.Database.Host, cfg.Database.Port, cfg.Database.Name)
-
-	db, err := sql.Open("postgres", dsn)
-	if err != nil {
-		return nil, fmt.Errorf("cannot open database: %w", err)
-	}
-
-	if err := db.Ping(); err != nil {
-		return nil, fmt.Errorf("database doesnt answer %w", err)
-	}
-
+func NewTaskStorage(db *DB) *Tasks {
 	return &Tasks{
 		db: db,
-	}, nil
+	}
 }
 
 func (s *Tasks) Init(ctx context.Context) error {
@@ -50,7 +36,7 @@ func (s *Tasks) Init(ctx context.Context) error {
 
 	_, err := s.db.ExecContext(ctx, q)
 	if err != nil {
-		return fmt.Errorf("cannot create table: %w", err)
+		return fmt.Errorf("cannot create tasks table: %w", err)
 	}
 
 	return nil

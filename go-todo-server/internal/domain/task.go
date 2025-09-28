@@ -14,7 +14,7 @@ var ErrInvalidName = errors.New("invalid name")
 type Status bool
 
 type Task struct {
-	ID          string     `json:"id"  db:"id"`
+	ID          string     `json:"id" db:"id"`
 	Title       string     `json:"title"  db:"title"`
 	Description string     `json:"description"  db:"description"`
 	Status      bool       `json:"status"  db:"status"`

@@ -3,20 +3,20 @@ package cli
 import (
 	"context"
 	"fmt"
-	"main/internal/app"
 	"main/internal/domain"
+	"main/internal/usecase"
 )
 
 type Handler struct {
-	App *app.App
+	usecase *usecase.App
 }
 
 func (h *Handler) AddHandler(ctx context.Context) {
-	dto := app.TaskInput{
+	dto := usecase.TaskInput{
 		Title:       scanCommand("Task title: "),
 		Description: scanCommand("Task description: "),
 	}
-	h.App.CreateTask(ctx, dto)
+	h.usecase.CreateTask(ctx, dto)
 	clear()
 }
 
@@ -27,7 +27,7 @@ func (h *Handler) RemoveHandler(ctx context.Context, filteredList []*domain.Task
 		errorCheck()
 		return
 	}
-	if err := h.App.DeleteTask(ctx, filteredList[id-1].ID); err != nil {
+	if err := h.usecase.DeleteTask(ctx, filteredList[id-1].ID); err != nil {
 		fmt.Println(err)
 		errorCheck()
 		return
@@ -44,7 +44,7 @@ func (h *Handler) ChangeDescriptionHandler(ctx context.Context, filteredList []*
 	// }
 	// uuid := filteredList[id-1].ID
 	// newDesc := scanCommand("New description: ")
-	// if err := h.App.ChangeDescription(ctx, newDesc, uuid); err != nil {
+	// if err := h.usecase.ChangeDescription(ctx, newDesc, uuid); err != nil {
 	// 	fmt.Println(err)
 	// 	errorCheck()
 	// 	return
@@ -61,7 +61,7 @@ func (h *Handler) CloseHandler(ctx context.Context, filteredList []*domain.Task)
 	// }
 
 	// uuid := filteredList[id-1].ID
-	// if err := h.App.CloseTask(ctx, uuid); err != nil {
+	// if err := h.usecase.CloseTask(ctx, uuid); err != nil {
 	// 	fmt.Println(err)
 	// 	errorCheck()
 	// 	return
@@ -77,7 +77,7 @@ func (h *Handler) OpenHandler(ctx context.Context, filteredList []*domain.Task) 
 	// }
 
 	// uuid := filteredList[id-1].ID
-	// if err := h.App.OpenTask(ctx, uuid); err != nil {
+	// if err := h.usecase.OpenTask(ctx, uuid); err != nil {
 	// 	fmt.Println(err)
 	// 	errorCheck()
 	// 	return

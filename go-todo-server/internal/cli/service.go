@@ -3,16 +3,16 @@ package cli
 import (
 	"context"
 	"fmt"
-	"main/internal/app"
 	"main/internal/domain"
+	"main/internal/usecase"
 	"strconv"
 	"strings"
 
 	"github.com/fatih/color"
 )
 
-func Run(app *app.App) error {
-	handler := &Handler{App: app}
+func Run(usecase *usecase.App) error {
+	handler := &Handler{usecase: usecase}
 	ctx := context.Background()
 
 	sort := "default"
@@ -22,14 +22,14 @@ func Run(app *app.App) error {
 	for running {
 		printHeading(filter, sort)
 
-		loaded, err := app.All(ctx)
+		loaded, err := usecase.AllTasks(ctx)
 		if err != nil {
 			return fmt.Errorf("run error: %w", err)
 		}
 
-		filtered := app.Filter(filter, loaded)
-		sorted := app.Sort(sort, filtered)
-		app.Filter(filter, loaded)
+		filtered := usecase.Filter(filter, loaded)
+		sorted := usecase.Sort(sort, filtered)
+		usecase.Filter(filter, loaded)
 
 		if len(sorted) == 0 {
 			fmt.Printf("%s\n", color.HiGreenString("Add some tasks."))

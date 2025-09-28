@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"main/internal/app"
 	"main/internal/cli"
 	httpclient "main/internal/http_client"
+	app "main/internal/usecase"
 )
 
 func main() {

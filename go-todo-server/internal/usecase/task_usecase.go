@@ -8,7 +8,7 @@ import (
 )
 
 func (a *App) GetTaskByID(ctx context.Context, id string) (*domain.Task, error) {
-	t, err := a.Repo.GetTaskByID(ctx, id)
+	t, err := a.TaskStorage.GetTaskByID(ctx, id)
 	if err != nil {
 		return nil, fmt.Errorf("getting task: %w", err)
 	}
@@ -21,21 +21,21 @@ func (a *App) CreateTask(ctx context.Context, dto TaskInput) (*domain.Task, erro
 		return nil, fmt.Errorf("new task error: %w", err)
 	}
 
-	if err := a.Repo.SaveTask(ctx, t); err != nil {
+	if err := a.TaskStorage.SaveTask(ctx, t); err != nil {
 		return nil, fmt.Errorf("save task error: %w", err)
 	}
 	return t, nil
 }
 
 func (a *App) DeleteTask(ctx context.Context, uuid string) error {
-	if err := a.Repo.RemoveTask(ctx, uuid); err != nil {
+	if err := a.TaskStorage.RemoveTask(ctx, uuid); err != nil {
 		return fmt.Errorf("remove task from storage: %w", err)
 	}
 	return nil
 }
 
-func (a *App) All(ctx context.Context) ([]*domain.Task, error) {
-	taskMap, err := a.Repo.GetTasks(ctx)
+func (a *App) AllTasks(ctx context.Context) ([]*domain.Task, error) {
+	taskMap, err := a.TaskStorage.GetTasks(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("app getting tasks: %w", err)
 	}
@@ -115,7 +115,7 @@ func (a *App) Filter(pattern string, list []*domain.Task) []*domain.Task {
 	return filtered
 }
 
-func (a *App) UpdateTask(ctx context.Context, id string, dto UpdateDTO) error {
+func (a *App) UpdateTask(ctx context.Context, id string, dto UpdateTaskDTO) error {
 	t, err := a.GetTaskByID(ctx, id)
 	if err != nil {
 		return err
@@ -132,5 +132,5 @@ func (a *App) UpdateTask(ctx context.Context, id string, dto UpdateDTO) error {
 		}
 	}
 
-	return a.Repo.UpdateTask(ctx, t)
+	return a.TaskStorage.UpdateTask(ctx, t)
 }

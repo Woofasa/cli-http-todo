@@ -47,7 +47,7 @@ func TestCreator_Create(t *testing.T) {
 			},
 			storageErr: nil,
 			wantErr:    true,
-			wantCall:   false, // не должен дернуть SaveTask
+			wantCall:   false,
 		},
 		{
 			name: "storage error",

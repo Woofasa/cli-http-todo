@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"main/internal/cli"
 	httpclient "main/internal/http_client"
 	app "main/internal/usecase"
 )
@@ -21,9 +20,10 @@ func main() {
 
 	switch version {
 	case "cli":
-		if err := cli.Run(app); err != nil {
-			log.Fatal("fatal error: ", err)
-		}
+		// 	if err := cli.Run(app); err != nil {
+		// 		log.Fatal("fatal error: ", err)
+		// 	}
+		fmt.Println("CLI is not finished")
 	case "http":
 		handler := &httpclient.Handler{App: app}
 		httpclient.RunServer(handler, ":3001")

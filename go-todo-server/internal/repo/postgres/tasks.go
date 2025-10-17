@@ -42,7 +42,7 @@ func (s *Tasks) Init(ctx context.Context) error {
 	return nil
 }
 
-func (s *Tasks) GetTaskByID(ctx context.Context, id string) (*domain.Task, error) {
+func (s *Tasks) GetByID(ctx context.Context, id string) (*domain.Task, error) {
 	rows := s.db.QueryRowContext(ctx, `SELECT id, title, description, status, created_at, completed_at FROM tasks WHERE id = $1`, id)
 
 	var t domain.Task

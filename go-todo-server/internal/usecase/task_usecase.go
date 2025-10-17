@@ -4,28 +4,9 @@ import (
 	"context"
 	"fmt"
 	"main/internal/domain"
+	"main/internal/usecase/task/gettask"
 	"slices"
 )
-
-func (a *App) GetTaskByID(ctx context.Context, id string) (*domain.Task, error) {
-	t, err := a.TaskStorage.GetTaskByID(ctx, id)
-	if err != nil {
-		return nil, fmt.Errorf("getting task: %w", err)
-	}
-	return t, nil
-}
-
-func (a *App) CreateTask(ctx context.Context, dto TaskInput) (*domain.Task, error) {
-	t, err := domain.NewTask(dto.Title, dto.Description)
-	if err != nil {
-		return nil, fmt.Errorf("new task error: %w", err)
-	}
-
-	if err := a.TaskStorage.SaveTask(ctx, t); err != nil {
-		return nil, fmt.Errorf("save task error: %w", err)
-	}
-	return t, nil
-}
 
 func (a *App) DeleteTask(ctx context.Context, uuid string) error {
 	if err := a.TaskStorage.RemoveTask(ctx, uuid); err != nil {
@@ -116,7 +97,8 @@ func (a *App) Filter(pattern string, list []*domain.Task) []*domain.Task {
 }
 
 func (a *App) UpdateTask(ctx context.Context, id string, dto UpdateTaskDTO) error {
-	t, err := a.GetTaskByID(ctx, id)
+	gettask := gettask.New(a.TaskStorage)
+	t, err := gettask.GetByID(ctx, id)
 	if err != nil {
 		return err
 	}

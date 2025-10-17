@@ -6,6 +6,8 @@ import (
 	"errors"
 	"main/internal/domain"
 	"main/internal/usecase"
+	"main/internal/usecase/task/create"
+	"main/internal/usecase/task/gettask"
 	"net/http"
 )
 
@@ -27,12 +29,13 @@ func (h *Handler) TasksHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		w.Header().Set("Content-Type", "application/json")
 	case http.MethodPost:
-		var dto usecase.TaskInput
+		createTask := create.New(h.App.TaskStorage)
+		var dto create.TaskInput
 		if err := json.NewDecoder(r.Body).Decode(&dto); err != nil {
 			http.Error(w, "bad request", http.StatusBadRequest)
 			return
 		}
-		t, err := h.App.CreateTask(context.Background(), dto)
+		t, err := createTask.Create(context.Background(), dto)
 		if err != nil {
 			switch {
 			case errors.Is(err, domain.ErrInvalidName):
@@ -56,6 +59,7 @@ func (h *Handler) TasksHandler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "bad request", http.StatusBadRequest)
 		}
 	case http.MethodPatch:
+		getTask := gettask.New(h.App.TaskStorage)
 		id := r.URL.Query().Get("id")
 		var dto usecase.UpdateTaskDTO
 
@@ -69,7 +73,7 @@ func (h *Handler) TasksHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		task, err := h.App.GetTaskByID(context.Background(), id)
+		task, err := getTask.GetByID(context.Background(), id)
 		if err != nil {
 			http.Error(w, "bad request", http.StatusBadRequest)
 			return

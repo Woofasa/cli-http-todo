@@ -6,7 +6,7 @@ import (
 )
 
 type TaskStorage interface {
-	GetTaskByID(ctx context.Context, id string) (*domain.Task, error)
+	GetByID(ctx context.Context, id string) (*domain.Task, error)
 	GetTasks(ctx context.Context) ([]*domain.Task, error)
 	SaveTask(ctx context.Context, task *domain.Task) error
 	UpdateTask(ctx context.Context, task *domain.Task) error

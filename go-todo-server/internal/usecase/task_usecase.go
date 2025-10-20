@@ -1,27 +1,9 @@
 package usecase
 
 import (
-	"context"
-	"fmt"
 	"main/internal/domain"
-	"main/internal/usecase/task/gettask"
 	"slices"
 )
-
-func (a *App) DeleteTask(ctx context.Context, uuid string) error {
-	if err := a.TaskStorage.RemoveTask(ctx, uuid); err != nil {
-		return fmt.Errorf("remove task from storage: %w", err)
-	}
-	return nil
-}
-
-func (a *App) AllTasks(ctx context.Context) ([]*domain.Task, error) {
-	taskMap, err := a.TaskStorage.GetTasks(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("app getting tasks: %w", err)
-	}
-	return taskMap, nil
-}
 
 func (a *App) Sort(pattern string, list []*domain.Task) []*domain.Task {
 	switch pattern {
@@ -94,25 +76,4 @@ func (a *App) Filter(pattern string, list []*domain.Task) []*domain.Task {
 		return list
 	}
 	return filtered
-}
-
-func (a *App) UpdateTask(ctx context.Context, id string, dto UpdateTaskDTO) error {
-	gettask := gettask.New(a.TaskStorage)
-	t, err := gettask.GetByID(ctx, id)
-	if err != nil {
-		return err
-	}
-	if dto.Title != nil {
-		t.Title = *dto.Title
-	}
-	if dto.Description != nil {
-		t.Description = *dto.Description
-	}
-	if dto.Status != nil {
-		if err := t.ChangeStatus(*dto.Status); err != nil {
-			return err
-		}
-	}
-
-	return a.TaskStorage.UpdateTask(ctx, t)
 }

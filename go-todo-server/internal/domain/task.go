@@ -54,3 +54,19 @@ func (t *Task) ChangeStatus(status bool) error {
 	}
 	return nil
 }
+
+func (t *Task) ChangeTitle(title string) error {
+	if title == "" || utf8.RuneCountInString(title) > 24 {
+		return ErrInvalidName
+	}
+	t.Title = title
+	return nil
+}
+
+func (t *Task) ChangeDescription(desc string) {
+	if desc == "" {
+		t.Description = "-"
+	} else {
+		t.Description = desc
+	}
+}

@@ -7,7 +7,10 @@ import (
 	"main/internal/domain"
 	"main/internal/usecase"
 	"main/internal/usecase/task/create"
+	getall "main/internal/usecase/task/getAll"
 	"main/internal/usecase/task/gettask"
+	"main/internal/usecase/task/remove"
+	"main/internal/usecase/task/update"
 	"net/http"
 )
 
@@ -18,7 +21,8 @@ type Handler struct {
 func (h *Handler) TasksHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
-		tasks, err := h.App.AllTasks(context.Background())
+		getAll := getall.New(h.App.TaskStorage)
+		tasks, err := getAll.Execute(context.Background())
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -35,7 +39,7 @@ func (h *Handler) TasksHandler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "bad request", http.StatusBadRequest)
 			return
 		}
-		t, err := createTask.Create(context.Background(), dto)
+		t, err := createTask.Execute(context.Background(), dto)
 		if err != nil {
 			switch {
 			case errors.Is(err, domain.ErrInvalidName):
@@ -54,28 +58,29 @@ func (h *Handler) TasksHandler(w http.ResponseWriter, r *http.Request) {
 
 		//todo: fix error
 	case http.MethodDelete:
+		removeTask := remove.New(h.App.TaskStorage)
 		id := r.URL.Query().Get("id")
-		if err := h.App.DeleteTask(context.Background(), id); err != nil {
+		if err := removeTask.Execute(context.Background(), id); err != nil {
 			http.Error(w, "bad request", http.StatusBadRequest)
 		}
 	case http.MethodPatch:
 		getTask := gettask.New(h.App.TaskStorage)
+		updateTask := update.New(h.App.TaskStorage)
 		id := r.URL.Query().Get("id")
-		var dto usecase.UpdateTaskDTO
+		task, err := getTask.GetByID(context.Background(), id)
+		if err != nil {
+			http.Error(w, "bad request", http.StatusBadRequest)
+			return
+		}
+		var dto update.DTO
 
 		if err := json.NewDecoder(r.Body).Decode(&dto); err != nil {
 			http.Error(w, "bad request", http.StatusBadRequest)
 			return
 		}
 
-		if err := h.App.UpdateTask(context.Background(), id, dto); err != nil {
+		if err := updateTask.Execute(context.Background(), task, dto); err != nil {
 			http.Error(w, "internal error", http.StatusInternalServerError)
-			return
-		}
-
-		task, err := getTask.GetByID(context.Background(), id)
-		if err != nil {
-			http.Error(w, "bad request", http.StatusBadRequest)
 			return
 		}
 

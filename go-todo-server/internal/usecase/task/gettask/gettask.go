@@ -6,21 +6,21 @@ import (
 	"main/internal/domain"
 )
 
-type IDTaker interface {
+type IDGetter interface {
 	GetByID(ctx context.Context, id string) (*domain.Task, error)
 }
 
 type TaskByID struct {
-	IDTaker
+	IDGetter
 }
 
-func New(storage IDTaker) *TaskByID {
+func New(storage IDGetter) *TaskByID {
 	return &TaskByID{
 		storage,
 	}
 }
 
-func (uc *TaskByID) GetTaskByID(ctx context.Context, id string) (*domain.Task, error) {
+func (uc *TaskByID) Execute(ctx context.Context, id string) (*domain.Task, error) {
 	t, err := uc.GetByID(ctx, id)
 	if err != nil {
 		return nil, fmt.Errorf("getting task: %w", err)

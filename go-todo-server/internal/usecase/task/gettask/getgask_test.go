@@ -29,7 +29,7 @@ func TestGetTask_GetTask_Success(t *testing.T) {
 	}
 	uc := gettask.New(fk)
 
-	taskByID, err := uc.GetTaskByID(context.Background(), expectedID)
+	taskByID, err := uc.Execute(context.Background(), expectedID)
 	if err != nil {
 		t.Errorf("Unexpected error: %v", err)
 	}
@@ -47,7 +47,7 @@ func TestGetTask_GetTask_Error(t *testing.T) {
 	}
 	uc := gettask.New(fk)
 
-	_, err := uc.GetTaskByID(context.Background(), "")
+	_, err := uc.Execute(context.Background(), "")
 
 	if err == nil {
 		t.Errorf("Expected error got nil")

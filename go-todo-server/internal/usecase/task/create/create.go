@@ -15,17 +15,17 @@ type TaskCreator interface {
 	SaveTask(ctx context.Context, task *domain.Task) error
 }
 
-type Creator struct {
+type CreateTask struct {
 	TaskCreator
 }
 
-func New(storage TaskCreator) *Creator {
-	return &Creator{
+func New(storage TaskCreator) *CreateTask {
+	return &CreateTask{
 		storage,
 	}
 }
 
-func (uc *Creator) Create(ctx context.Context, dto TaskInput) (*domain.Task, error) {
+func (uc *CreateTask) Execute(ctx context.Context, dto TaskInput) (*domain.Task, error) {
 	t, err := domain.NewTask(dto.Title, dto.Description)
 	if err != nil {
 		return nil, fmt.Errorf("%w", err)

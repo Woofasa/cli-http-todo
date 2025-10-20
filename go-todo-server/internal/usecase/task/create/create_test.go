@@ -25,7 +25,7 @@ func TestCreator_Create_Success(t *testing.T) {
 		Title:       "test",
 		Description: "test",
 	}
-	_, err := uc.Create(context.Background(), dto)
+	_, err := uc.Execute(context.Background(), dto)
 	if err != nil {
 		t.Fatalf("Expected no error: %v", err)
 	}
@@ -45,7 +45,7 @@ func TestCreator_Create_Error(t *testing.T) {
 		Description: "test",
 	}
 
-	_, err := uc.Create(context.Background(), dto)
+	_, err := uc.Execute(context.Background(), dto)
 	if !errors.Is(err, wantErr) {
 		t.Fatalf("Expected error %v", wantErr)
 	}
